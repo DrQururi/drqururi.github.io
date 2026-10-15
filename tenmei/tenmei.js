@@ -193,6 +193,68 @@ function buildCard(fortune, userAttr, extras, reading) {
   return card;
 }
 
+// ─── 4占術タブ（タイトル＋ボタンで切り替え。縦列挙はしない） ─────────────
+// role="tab"/"tabpanel" + 矢印キー/Home/Endでのキーボード操作に対応（WAI-ARIA tabsパターン）。
+function buildFortuneTabs(cardsById) {
+  const wrap = el('div', { class: 'tabsWrap' });
+  wrap.appendChild(el('div', { class: 'tabsWrap__heading' }, [el('span', { class: 'bar' }), '4つの占術']));
+
+  const tablist = el('div', { class: 'tabsWrap__tablist', role: 'tablist', 'aria-label': '占術を選択' });
+  const panelHost = el('div', { class: 'tabsWrap__panel' });
+  const buttons = [];
+
+  function selectTab(idx, moveFocus) {
+    FORTUNE_DATA.forEach((fortune, i) => {
+      const active = i === idx;
+      buttons[i].setAttribute('aria-selected', active ? 'true' : 'false');
+      buttons[i].tabIndex = active ? 0 : -1;
+      buttons[i].classList.toggle('tabBtn--active', active);
+    });
+    const fortune = FORTUNE_DATA[idx];
+    panelHost.innerHTML = '';
+    const panel = el('div', {
+      id: `panel-${fortune.id}`,
+      role: 'tabpanel',
+      'aria-labelledby': `tab-${fortune.id}`,
+      tabindex: '0',
+    });
+    panel.appendChild(cardsById[fortune.id]);
+    panelHost.appendChild(panel);
+    if (moveFocus) buttons[idx].focus();
+  }
+
+  FORTUNE_DATA.forEach((fortune, i) => {
+    const btn = el('button', {
+      type: 'button',
+      class: 'tabBtn',
+      role: 'tab',
+      id: `tab-${fortune.id}`,
+      'aria-controls': `panel-${fortune.id}`,
+      'aria-selected': i === 0 ? 'true' : 'false',
+      tabindex: i === 0 ? '0' : '-1',
+      onclick: () => selectTab(i, false),
+      onkeydown: (e) => {
+        const last = FORTUNE_DATA.length - 1;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); selectTab(i === last ? 0 : i + 1, true); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); selectTab(i === 0 ? last : i - 1, true); }
+        else if (e.key === 'Home') { e.preventDefault(); selectTab(0, true); }
+        else if (e.key === 'End') { e.preventDefault(); selectTab(last, true); }
+      },
+    }, [
+      el('span', { class: 'tabBtn__icon', text: fortune.icon }),
+      el('span', { class: 'tabBtn__name', text: fortune.name }),
+    ]);
+    buttons.push(btn);
+    tablist.appendChild(btn);
+  });
+
+  selectTab(0, false);
+
+  wrap.appendChild(tablist);
+  wrap.appendChild(panelHost);
+  return wrap;
+}
+
 function buildCompositeTeaser() {
   const box = el('div', { class: 'composite' });
   box.appendChild(el('div', { class: 'composite__banner' }, [
@@ -349,11 +411,13 @@ function renderResult(y, m, d) {
   const resultSection = $('#result');
   const deck = $('#cardDeck');
   deck.innerHTML = '';
+  const cardsById = {};
   for (const fortune of FORTUNE_DATA) {
     const extras = buildFortuneExtras(profile, fortune.id);
     const reading = READING_LOOKUP[fortune.id] ? READING_LOOKUP[fortune.id](profile) : null;
-    deck.appendChild(buildCard(fortune, userAttrs[fortune.id], extras, reading));
+    cardsById[fortune.id] = buildCard(fortune, userAttrs[fortune.id], extras, reading);
   }
+  deck.appendChild(buildFortuneTabs(cardsById));
 
   const directionHost = $('#directionHost');
   directionHost.innerHTML = '';
