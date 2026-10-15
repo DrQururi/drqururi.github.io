@@ -1,5 +1,18 @@
 // 天命診断サイト — 画面制御（生年月日はこの端末内だけで扱い、どこにも送信しない）
 import { buildFortuneProfile, buildFortuneExtras, calcYearDirections, DIR_ORDER, DIR_META } from './fortune-core.mjs';
+import { getNineStarReading } from './readings/nine-star.mjs';
+import { getNumerologyReading } from './readings/numerology.mjs';
+import { getAstrologyReading } from './readings/astrology.mjs';
+import { getFourPillarsReading } from './readings/four-pillars.mjs';
+import { getYearlyReading } from './readings/yearly-2026.mjs';
+
+// 占術ID → その占術の鑑定データを引くための関数（profile全体を受け取る）
+const READING_LOOKUP = {
+  nine_star:    (profile) => getNineStarReading(profile.nineStar.honmeiStarName),
+  numerology:   (profile) => getNumerologyReading(profile.numerology.lifePath),
+  astrology:    (profile) => getAstrologyReading(profile.astrology.sunSign),
+  four_pillars: (profile) => getFourPillarsReading(profile.fourPillars.day.stem),
+};
 
 const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6791989590';
 const SITE_URL = 'https://drqururi.github.io/tenmei/';
@@ -86,7 +99,24 @@ function tagRow(items, variant) {
   return wrap;
 }
 
-function buildCard(fortune, userAttr, extras) {
+function buildReadingSection(reading) {
+  if (!reading) return null;
+  const wrap = el('div', { class: 'card__reading' });
+  const items = [
+    { label: '本質・性格', text: reading.essence },
+    { label: '相性のいいタイプ', text: reading.compatibility },
+    { label: '人生の運気の流れ', text: reading.life_flow },
+  ];
+  items.forEach((item, i) => {
+    const sec = el('div', { class: i === 0 ? 'card__readingSec' : 'card__readingSec card__readingSec--sep' });
+    sec.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), item.label]));
+    sec.appendChild(el('p', { class: 'card__readingText', text: item.text }));
+    wrap.appendChild(sec);
+  });
+  return wrap;
+}
+
+function buildCard(fortune, userAttr, extras, reading) {
   const card = el('div', { class: 'card' });
 
   const head = el('div', { class: 'card__head' }, [
@@ -142,6 +172,10 @@ function buildCard(fortune, userAttr, extras) {
     }
     card.appendChild(balanceBox);
   }
+
+  // 本質・性格 / 相性のいいタイプ / 人生の運気の流れ（アプリの基本鑑定カードと同じ見出し・並び）
+  const readingBox = buildReadingSection(reading);
+  if (readingBox) card.appendChild(readingBox);
 
   // 占術の解説（アプリの「〇〇とは？」モーダルと同じ静的テキスト）
   const explainBox = el('div', { class: 'card__explain', hidden: '' });
@@ -243,6 +277,25 @@ function buildCompassSvg(dirsByKind, size = 220) {
   return svg;
 }
 
+function buildYearlySection(honmeiStar, kigakuYear) {
+  const reading = getYearlyReading(honmeiStar, kigakuYear);
+  if (!reading) return null;
+  const box = el('div', { class: 'yearly' });
+  box.appendChild(el('div', { class: 'yearly__label' }, [el('span', { class: 'bar' }), `${kigakuYear}年のあなたの運勢`]));
+  box.appendChild(el('p', { class: 'yearly__text', text: reading.overview }));
+
+  const grid = el('div', { class: 'yearly__grid' });
+  const items = [['仕事', reading.work], ['お金', reading.money], ['恋愛', reading.love], ['健康', reading.health]];
+  for (const [label, text] of items) {
+    grid.appendChild(el('div', { class: 'yearly__item' }, [
+      el('div', { class: 'yearly__itemLabel', text: label }),
+      el('div', { class: 'yearly__itemText', text }),
+    ]));
+  }
+  box.appendChild(grid);
+  return box;
+}
+
 function buildDirectionSection(yearDirections) {
   const box = el('div', { class: 'direction' });
   box.appendChild(el('div', { class: 'direction__label' }, [el('span', { class: 'bar bar--green' }), `${yearDirections.kigakuYear}年のあなたの吉方位`]));
@@ -298,12 +351,16 @@ function renderResult(y, m, d) {
   deck.innerHTML = '';
   for (const fortune of FORTUNE_DATA) {
     const extras = buildFortuneExtras(profile, fortune.id);
-    deck.appendChild(buildCard(fortune, userAttrs[fortune.id], extras));
+    const reading = READING_LOOKUP[fortune.id] ? READING_LOOKUP[fortune.id](profile) : null;
+    deck.appendChild(buildCard(fortune, userAttrs[fortune.id], extras, reading));
   }
 
   const directionHost = $('#directionHost');
   directionHost.innerHTML = '';
-  directionHost.appendChild(buildDirectionSection(calcYearDirections(birthDate)));
+  const yearDirections = calcYearDirections(birthDate);
+  const yearlyBox = buildYearlySection(yearDirections.honmeiStar, yearDirections.kigakuYear);
+  if (yearlyBox) directionHost.appendChild(yearlyBox);
+  directionHost.appendChild(buildDirectionSection(yearDirections));
 
   const teaserHost = $('#compositeHost');
   teaserHost.innerHTML = '';
