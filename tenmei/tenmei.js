@@ -5,6 +5,7 @@ import { getNumerologyReading } from './readings/numerology.mjs';
 import { getAstrologyReading } from './readings/astrology.mjs';
 import { getFourPillarsReading } from './readings/four-pillars.mjs';
 import { getYearlyReading } from './readings/yearly-2026.mjs';
+import { getCompositeFreeReading } from './readings/composite-free.mjs';
 
 // 占術ID → その占術の鑑定データを引くための関数（profile全体を受け取る）
 const READING_LOOKUP = {
@@ -64,16 +65,29 @@ const FORTUNE_DATA = [
   },
 ];
 
-// アプリの購入モーダルと同一の文言（天命の複合鑑定でアンロックされる項目）
+// 2026-10-16: アプリの購入モーダルと同一の文言に更新。総合性格・天職・人生の転機・
+// 恋愛の癖と傾向は無料公開になったため外し、新規追加した有料項目を含めた16項目から抜粋。
 const COMPOSITE_ITEMS = [
-  '総合的な性格・好き嫌い',
-  '相性のいい人の特徴・誕生月',
-  '運命の人と出会う場所',
-  '運気を上げる・下げる行動',
-  '天職・仕事との向き合い方',
   '生まれてから死ぬまでの運気の流れ',
+  '結婚運・結婚の時期',
+  '要注意の時期・転機',
+  '運命の人と出会う場所',
+  '家族運・人間関係のアドバイス',
   '隠れた才能・前世・魂のルーツ',
+  '開運アクション（ラッキーカラー・数字・方位）',
 ];
+
+// 無料プレビュー4項目の表示メタ（アプリ側 FREE_PREVIEW_META と同じ4項目）
+const FREE_PREVIEW_META = [
+  { key: 'personality',   title: '総合性格',       color: '#c8b8ff' },
+  { key: 'career',        title: '天職',           color: '#a0c8f5' },
+  { key: 'turningPoints', title: '人生の転機',     color: '#f5d78e' },
+  { key: 'loveHabit',     title: '恋愛の癖と傾向', color: '#e8a0c0' },
+];
+
+// 「約4割無料／約6割有料」の文言（アプリ側 lib/claude.ts の宣言済み目標文字数と揃える。実測値ではないため「約」を付ける）
+const FREE_RATIO_TEXT = '無料で公開中：全体の約4割（約2,900字）';
+const PAID_RATIO_TEXT = '有料の鑑定：約6割（約4,560字・16項目）';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -255,7 +269,32 @@ function buildFortuneTabs(cardsById) {
   return wrap;
 }
 
-function buildCompositeTeaser() {
+// 無料プレビュー4項目（総合性格・天職・人生の転機・恋愛の癖と傾向）を実際の文章で表示。
+// composite-free.mjs の事前作成テキスト（本命星9パターン）を使う。AI呼び出しはしない。
+function buildFreePreview(honmeiStarName) {
+  const reading = getCompositeFreeReading(honmeiStarName);
+  if (!reading) return null;
+
+  const wrap = el('div', { class: 'freePreview' });
+  wrap.appendChild(el('div', { class: 'ratioRow' }, [
+    el('span', { class: 'ratioBadge ratioBadge--free', text: FREE_RATIO_TEXT }),
+  ]));
+
+  for (const { key, title, color } of FREE_PREVIEW_META) {
+    const text = reading[key];
+    if (!text) continue;
+    const card = el('div', { class: 'freePreview__card', style: `border:1px solid ${color}50;` });
+    card.appendChild(el('div', { class: 'freePreview__head', style: `background:${color}28;` }, [
+      el('span', { class: 'freePreview__title', style: `color:${color};`, text: title }),
+      el('span', { class: 'freePreview__free', text: '無料公開中' }),
+    ]));
+    card.appendChild(el('p', { class: 'freePreview__body', text }));
+    wrap.appendChild(card);
+  }
+  return wrap;
+}
+
+function buildCompositeTeaser(honmeiStarName) {
   const box = el('div', { class: 'composite' });
   box.appendChild(el('div', { class: 'composite__banner' }, [
     el('div', { class: 'composite__stars', text: '✦ ✦ ✦' }),
@@ -264,9 +303,16 @@ function buildCompositeTeaser() {
     el('div', { class: 'composite__sub', text: '4つの占術が語る、あなたの本当の姿' }),
   ]));
 
+  // 無料プレビュー（総合性格・天職・人生の転機・恋愛の癖と傾向は誰でも読める）
+  const freePreview = buildFreePreview(honmeiStarName);
+  if (freePreview) box.appendChild(freePreview);
+
   const body = el('div', { class: 'composite__body' });
-  const lockTitle = el('div', { class: 'composite__lockTitle', text: '天命の複合鑑定を解放する' });
-  const lockDesc = el('div', { class: 'composite__lockDesc', text: '総合的な性格・相性・運気の流れ・天職・前世まで、4占術を統合した鑑定はアプリで見られます' });
+  const lockTitle = el('div', { class: 'composite__lockTitle', text: '残り16項目の鑑定を解放する' });
+  const lockDesc = el('div', { class: 'composite__lockDesc', text: '相性・運気の流れ・結婚運・金運・前世まで、4占術を統合した鑑定の続きはアプリで見られます' });
+  const ratioRow = el('div', { class: 'ratioRow' }, [
+    el('span', { class: 'ratioBadge ratioBadge--paid', text: PAID_RATIO_TEXT }),
+  ]);
   const list = el('div', { class: 'composite__list' });
   for (const item of COMPOSITE_ITEMS) {
     list.appendChild(el('div', { class: 'composite__item' }, [el('span', { class: 'composite__dot' }), item]));
@@ -281,6 +327,7 @@ function buildCompositeTeaser() {
 
   body.appendChild(lockTitle);
   body.appendChild(lockDesc);
+  body.appendChild(ratioRow);
   body.appendChild(list);
   body.appendChild(cta);
   box.appendChild(body);
@@ -428,7 +475,7 @@ function renderResult(y, m, d) {
 
   const teaserHost = $('#compositeHost');
   teaserHost.innerHTML = '';
-  teaserHost.appendChild(buildCompositeTeaser());
+  teaserHost.appendChild(buildCompositeTeaser(profile.nineStar.honmeiStarName));
 
   $('#resultHeading').textContent = `${profile.nineStar.honmeiStarName}の あなたの天命`;
   $('#resultBirth').textContent = formatBirthLabel(y, m, d);
