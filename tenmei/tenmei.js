@@ -5,7 +5,7 @@ import { getNumerologyReading } from './readings/numerology.mjs';
 import { getAstrologyReading } from './readings/astrology.mjs';
 import { getFourPillarsReading } from './readings/four-pillars.mjs';
 import { getYearlyReading } from './readings/yearly-2026.mjs';
-import { getCompositeFreeReading } from './readings/composite-free.mjs';
+import { getStarSignOverlap, getNumStemOverlap, getSignStemOverlap } from './readings/composite-pairs.mjs';
 
 // 占術ID → その占術の鑑定データを引くための関数（profile全体を受け取る）
 const READING_LOOKUP = {
@@ -77,16 +77,11 @@ const COMPOSITE_ITEMS = [
   '開運アクション（ラッキーカラー・数字・方位）',
 ];
 
-// 無料プレビュー4項目の表示メタ（アプリ側 FREE_PREVIEW_META と同じ4項目）
-const FREE_PREVIEW_META = [
-  { key: 'personality',   title: '総合性格',       color: '#c8b8ff' },
-  { key: 'career',        title: '天職',           color: '#a0c8f5' },
-  { key: 'turningPoints', title: '人生の転機',     color: '#f5d78e' },
-  { key: 'loveHabit',     title: '恋愛の癖と傾向', color: '#e8a0c0' },
-];
+// 2026-10-16: 無料プレビュー4項目（総合性格・天職・人生の転機・恋愛の癖と傾向）は、
+// 統合鑑定区画（九星×星座／数秘×日干／星座×日干）と内容が重なるため画面表示から外した
+// （composite-free.mjs とそのデータは温存。将来また使う可能性があるため削除しない）。
 
-// 「約4割無料／約6割有料」の文言（アプリ側 lib/claude.ts の宣言済み目標文字数と揃える。実測値ではないため「約」を付ける）
-const FREE_RATIO_TEXT = '無料で公開中：全体の約4割（約2,900字）';
+// 「約6割有料」の文言（アプリ側 lib/claude.ts の宣言済み目標文字数と揃える。実測値ではないため「約」を付ける）
 const PAID_RATIO_TEXT = '有料の鑑定：約6割（約4,560字・16項目）';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -207,7 +202,21 @@ function buildCard(fortune, userAttr, extras, reading) {
   return card;
 }
 
-// ─── 4占術タブ（タイトル＋ボタンで切り替え。縦列挙はしない） ─────────────
+// ─── 区画1: 4つの占術 それぞれの単独結果（タブ切り替え） ─────────────
+// 博士指示（2026-10-16）：ここは「占術ごとの単独の結果」であり統合結果ではないことを
+// 一目でわかるようにする。見出し・背景・枠を区画2（統合鑑定）と明確に区別する（CSS側で対応）。
+function buildSoloSection(cardsById) {
+  const section = el('section', { class: 'soloSection' });
+  section.appendChild(el('div', { class: 'soloSection__head' }, [
+    el('h2', { class: 'soloSection__title', text: '4つの占術 それぞれの結果' }),
+    el('p', { class: 'soloSection__lead', text: 'まずは占術ごとに、単独で読み解いた結果です' }),
+    el('p', { class: 'soloSection__note', text: '※ まだ4つを重ね合わせていません。統合した結果は下にあります。' }),
+  ]));
+  section.appendChild(buildFortuneTabs(cardsById));
+  return section;
+}
+
+// タブ本体（タイトル＋ボタンで切り替え。縦列挙はしない） ─────────────
 // role="tab"/"tabpanel" + 矢印キー/Home/Endでのキーボード操作に対応（WAI-ARIA tabsパターン）。
 function buildFortuneTabs(cardsById) {
   const wrap = el('div', { class: 'tabsWrap' });
@@ -269,69 +278,74 @@ function buildFortuneTabs(cardsById) {
   return wrap;
 }
 
-// 無料プレビュー4項目（総合性格・天職・人生の転機・恋愛の癖と傾向）を実際の文章で表示。
-// composite-free.mjs の事前作成テキスト（本命星9パターン）を使う。AI呼び出しはしない。
-function buildFreePreview(honmeiStarName) {
-  const reading = getCompositeFreeReading(honmeiStarName);
-  if (!reading) return null;
+// ─── 区画2: 4つを統合した、あなたの天命 ──────────────────────────
+// 博士指示（2026-10-16）：「2つずつ組み合わせた」とは書かず、
+// 「4つの命術を重ね合わせて多角的に読み解いた」という見せ方にする。
+// 実データ（九星×星座／数秘×日干／星座×日干）は src/readings/pairs/ の6ファイル
+// （別担当が作成中）。キーが見つからない間はそのブロックを出さずエラーにしない。
 
-  const wrap = el('div', { class: 'freePreview' });
-  wrap.appendChild(el('div', { class: 'ratioRow' }, [
-    el('span', { class: 'ratioBadge ratioBadge--free', text: FREE_RATIO_TEXT }),
-  ]));
+const INTEGRATED_BLOCK_SPECS = [
+  { title: '本質の重なり', fetch: (p) => getStarSignOverlap(p.nineStar.honmeiStarName, p.astrology.sunSign) },
+  { title: '才能と使命', fetch: (p) => getNumStemOverlap(p.numerology.lifePath, p.fourPillars.day.stem) },
+  { title: '人との関わり方', fetch: (p) => getSignStemOverlap(p.astrology.sunSign, p.fourPillars.day.stem) },
+];
 
-  for (const { key, title, color } of FREE_PREVIEW_META) {
-    const text = reading[key];
-    if (!text) continue;
-    const card = el('div', { class: 'freePreview__card', style: `border:1px solid ${color}50;` });
-    card.appendChild(el('div', { class: 'freePreview__head', style: `background:${color}28;` }, [
-      el('span', { class: 'freePreview__title', style: `color:${color};`, text: title }),
-      el('span', { class: 'freePreview__free', text: '無料公開中' }),
-    ]));
-    card.appendChild(el('p', { class: 'freePreview__body', text }));
-    wrap.appendChild(card);
-  }
-  return wrap;
+// 九星×星座／数秘×日干／星座×日干 の3ブロックを並べる。1件も無ければ null を返す
+// （呼び出し側はその場合ブロック全体を省略し、アップセル部分だけ表示する）。
+async function buildIntegratedBlocks(profile) {
+  const results = await Promise.all(INTEGRATED_BLOCK_SPECS.map((spec) => spec.fetch(profile)));
+  const wrap = el('div', { class: 'integrated__blocks' });
+  INTEGRATED_BLOCK_SPECS.forEach((spec, i) => {
+    const result = results[i];
+    if (!result || !result.text) return;
+    const block = el('div', { class: 'integratedBlock' });
+    block.appendChild(el('div', { class: 'integratedBlock__title' }, [el('span', { class: 'bar' }), spec.title]));
+    block.appendChild(el('div', { class: 'integratedBlock__pair', text: result.label }));
+    block.appendChild(el('p', { class: 'integratedBlock__text', text: result.text }));
+    wrap.appendChild(block);
+  });
+  return wrap.childElementCount > 0 ? wrap : null;
 }
 
-function buildCompositeTeaser(honmeiStarName) {
-  const box = el('div', { class: 'composite' });
-  box.appendChild(el('div', { class: 'composite__banner' }, [
-    el('div', { class: 'composite__stars', text: '✦ ✦ ✦' }),
-    el('div', { class: 'composite__title', text: 'これらの占術を統合した' }),
-    el('div', { class: 'composite__titleGold', text: 'あなただけの総合占い' }),
-    el('div', { class: 'composite__sub', text: '4つの占術が語る、あなたの本当の姿' }),
-  ]));
-
-  // 無料プレビュー（総合性格・天職・人生の転機・恋愛の癖と傾向は誰でも読める）
-  const freePreview = buildFreePreview(honmeiStarName);
-  if (freePreview) box.appendChild(freePreview);
-
+// 残り16項目のアップセル（アプリ誘導）。統合鑑定区画の中、3ブロックの下に置く。
+function buildIntegratedUpsell() {
   const body = el('div', { class: 'composite__body' });
-  const lockTitle = el('div', { class: 'composite__lockTitle', text: '残り16項目の鑑定を解放する' });
-  const lockDesc = el('div', { class: 'composite__lockDesc', text: '相性・運気の流れ・結婚運・金運・前世まで、4占術を統合した鑑定の続きはアプリで見られます' });
-  const ratioRow = el('div', { class: 'ratioRow' }, [
+  body.appendChild(el('div', { class: 'composite__lockTitle', text: '残り16項目の鑑定を解放する' }));
+  body.appendChild(el('div', {
+    class: 'composite__lockDesc',
+    text: '相性・運気の流れ・結婚運・金運・前世まで、4占術を統合した鑑定の続きはアプリで見られます',
+  }));
+  body.appendChild(el('div', { class: 'ratioRow' }, [
     el('span', { class: 'ratioBadge ratioBadge--paid', text: PAID_RATIO_TEXT }),
-  ]);
+  ]));
   const list = el('div', { class: 'composite__list' });
   for (const item of COMPOSITE_ITEMS) {
     list.appendChild(el('div', { class: 'composite__item' }, [el('span', { class: 'composite__dot' }), item]));
   }
-  const cta = el('a', {
+  body.appendChild(list);
+  body.appendChild(el('a', {
     class: 'btn btn--gold',
     href: APP_STORE_URL,
     target: '_blank',
     rel: 'noopener',
     text: 'アプリで鑑定を解放する',
-  });
+  }));
+  return body;
+}
 
-  body.appendChild(lockTitle);
-  body.appendChild(lockDesc);
-  body.appendChild(ratioRow);
-  body.appendChild(list);
-  body.appendChild(cta);
-  box.appendChild(body);
-  return box;
+async function buildIntegratedSection(profile) {
+  const section = el('section', { class: 'integratedSection', id: 'integratedSection' });
+  section.appendChild(el('div', { class: 'integratedSection__head' }, [
+    el('h2', { class: 'integratedSection__title', text: '4つを統合した、あなたの天命' }),
+    el('p', {
+      class: 'integratedSection__lead',
+      text: '九星気学・数秘術・西洋占星術・四柱推命の結果を重ね合わせ、多角的に読み解きました',
+    }),
+  ]));
+  const blocks = await buildIntegratedBlocks(profile);
+  if (blocks) section.appendChild(blocks);
+  section.appendChild(buildIntegratedUpsell());
+  return section;
 }
 
 // ─── 今年の吉方位（九星気学・年盤）── 線のコンパスSVG ──────────────
@@ -440,49 +454,149 @@ function buildDirectionSection(yearDirections) {
   return box;
 }
 
+// ─── ローディング演出（診断ボタン押下〜結果表示まで約5秒） ──────────────
+// 博士指示（2026-10-16）：すぐ結果を出すと信頼感が無いので、段階的な文言＋進捗バー＋
+// 星図風の回転アニメーションで約5秒かける。prefers-reduced-motionの人は回転のみ止める
+// （待ち時間・段階表示は変えない＝CSS側の@media(prefers-reduced-motion)で対応済み）。
+const LOADING_STAGES = [
+  '九星気学 本命星を算出中',
+  '数秘術 ライフパスナンバーを算出中',
+  '西洋占星術 太陽星座を算出中',
+  '四柱推命 日干を算出中',
+  '4つの結果を統合しています',
+];
+const LOADING_STAGE_MS = 1000; // 5段 × 1000ms ≒ 約5秒
+
+// 星図風の回転リング（絵文字は使わず線のSVGのみ。サイトの紫/金配色に揃える）
+function buildLoadingRingSvg() {
+  const svg = svgEl('svg', { class: 'loading__ring', viewBox: '0 0 120 120', role: 'img', 'aria-label': '計算中' });
+  svg.appendChild(svgEl('circle', { cx: 60, cy: 60, r: 50, fill: 'none', stroke: 'rgba(180,140,255,0.22)', 'stroke-width': 1 }));
+  svg.appendChild(svgEl('circle', {
+    cx: 60, cy: 60, r: 34, fill: 'none', stroke: 'rgba(201,168,76,0.3)', 'stroke-width': 1, 'stroke-dasharray': '3 7',
+  }));
+  const points = [[60, 14], [97, 37], [97, 83], [60, 106], [23, 83], [23, 37]];
+  points.forEach(([x1, y1], i) => {
+    const [x2, y2] = points[(i + 1) % points.length];
+    svg.appendChild(svgEl('line', { x1, y1, x2, y2, stroke: 'rgba(201,168,76,0.4)', 'stroke-width': 1 }));
+  });
+  for (const [x, y] of points) {
+    svg.appendChild(svgEl('circle', { cx: x, cy: y, r: 3, fill: 'rgba(245,215,142,0.9)' }));
+  }
+  svg.appendChild(svgEl('circle', { cx: 60, cy: 60, r: 4, fill: 'rgba(255,255,255,0.85)' }));
+  return svg;
+}
+
+// 初期化時に1回だけ、ローディングUIの静的な骨組み（リング・段階リスト）をDOMへ入れる
+function populateLoadingHost() {
+  $('#loadingRingWrap').appendChild(buildLoadingRingSvg());
+  const stages = $('#loadingStages');
+  LOADING_STAGES.forEach((label, i) => {
+    stages.appendChild(el('div', { class: 'loading__stage', id: `loadingStage-${i}` }, [
+      el('span', { class: 'loading__stageMark' }),
+      el('span', { class: 'loading__stageLabel', text: label }),
+    ]));
+  });
+}
+
+// 前回の状態（チェック済み・進捗バー）をリセットしてから再度使えるようにする
+function resetLoadingHost() {
+  $('#loadingFill').style.width = '0%';
+  LOADING_STAGES.forEach((_, i) => {
+    const node = $(`#loadingStage-${i}`);
+    node.classList.remove('loading__stage--active', 'loading__stage--done');
+    node.querySelector('.loading__stageMark').textContent = '';
+  });
+}
+
+// 段階的に文言を進め、各段完了でチェック表示＋進捗バーを更新する。約5秒かけて解決する。
+function runLoadingSequence() {
+  const fill = $('#loadingFill');
+  const total = LOADING_STAGES.length;
+  return new Promise((resolve) => {
+    function step(i) {
+      const node = $(`#loadingStage-${i}`);
+      node.classList.add('loading__stage--active');
+      fill.style.width = `${Math.round(((i + 1) / total) * 100)}%`;
+      setTimeout(() => {
+        node.classList.remove('loading__stage--active');
+        node.classList.add('loading__stage--done');
+        node.querySelector('.loading__stageMark').textContent = '✓';
+        if (i + 1 < total) step(i + 1);
+        else setTimeout(resolve, 200);
+      }, LOADING_STAGE_MS);
+    }
+    step(0);
+  });
+}
+
 function formatBirthLabel(y, m, d) {
   return `${y}年${m}月${d}日生まれ`;
 }
 
-function renderResult(y, m, d) {
-  const birthDate = new Date(y, m - 1, d);
-  const profile = buildFortuneProfile(birthDate);
+let isRendering = false;
 
-  const userAttrs = {
-    nine_star: { label: '本命星', value: profile.nineStar.honmeiStarName, sub: `月命星：${profile.nineStar.tsukiStarName}` },
-    numerology: { label: '数秘術の数', value: String(profile.numerology.lifePath), sub: profile.numerology.ismaster ? 'マスターナンバー' : undefined },
-    astrology: { label: '太陽星座', value: profile.astrology.sunSign, sub: `月星座：${profile.astrology.moonSign}` },
-    four_pillars: { label: '命式', value: profile.fourPillars.day.combined, sub: `五行：${profile.fourPillars.year.stem}` },
-  };
+async function renderResult(y, m, d) {
+  // 連打での二重実行を防ぐ（すでに診断中なら無視する）
+  if (isRendering) return;
+  isRendering = true;
 
-  const resultSection = $('#result');
-  const deck = $('#cardDeck');
-  deck.innerHTML = '';
-  const cardsById = {};
-  for (const fortune of FORTUNE_DATA) {
-    const extras = buildFortuneExtras(profile, fortune.id);
-    const reading = READING_LOOKUP[fortune.id] ? READING_LOOKUP[fortune.id](profile) : null;
-    cardsById[fortune.id] = buildCard(fortune, userAttrs[fortune.id], extras, reading);
+  try {
+    const birthDate = new Date(y, m - 1, d);
+    const profile = buildFortuneProfile(birthDate);
+
+    const resultSection = $('#result');
+    const resultBody = $('#resultBody');
+
+    // 結果の代わりにローディング演出を先に表示する（共有URL等どの経路から呼ばれても同じ）
+    $('#intro').hidden = true;
+    resultSection.hidden = false;
+    resultBody.hidden = true;
+    resetLoadingHost();
+    $('#loadingHost').hidden = false;
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // ローディング演出（約5秒）と、裏側でのデータ組み立て（統合鑑定のpairs読み込み含む）を並行して進める
+    const [, integratedSection] = await Promise.all([
+      runLoadingSequence(),
+      buildIntegratedSection(profile),
+    ]);
+
+    const userAttrs = {
+      nine_star: { label: '本命星', value: profile.nineStar.honmeiStarName, sub: `月命星：${profile.nineStar.tsukiStarName}` },
+      numerology: { label: '数秘術の数', value: String(profile.numerology.lifePath), sub: profile.numerology.ismaster ? 'マスターナンバー' : undefined },
+      astrology: { label: '太陽星座', value: profile.astrology.sunSign, sub: `月星座：${profile.astrology.moonSign}` },
+      four_pillars: { label: '命式', value: profile.fourPillars.day.combined, sub: `五行：${profile.fourPillars.year.stem}` },
+    };
+
+    const soloHost = $('#soloHost');
+    soloHost.innerHTML = '';
+    const cardsById = {};
+    for (const fortune of FORTUNE_DATA) {
+      const extras = buildFortuneExtras(profile, fortune.id);
+      const reading = READING_LOOKUP[fortune.id] ? READING_LOOKUP[fortune.id](profile) : null;
+      cardsById[fortune.id] = buildCard(fortune, userAttrs[fortune.id], extras, reading);
+    }
+    soloHost.appendChild(buildSoloSection(cardsById));
+
+    const integratedHost = $('#integratedHost');
+    integratedHost.innerHTML = '';
+    integratedHost.appendChild(integratedSection);
+
+    const directionHost = $('#directionHost');
+    directionHost.innerHTML = '';
+    const yearDirections = calcYearDirections(birthDate);
+    const yearlyBox = buildYearlySection(yearDirections.honmeiStar, yearDirections.kigakuYear);
+    if (yearlyBox) directionHost.appendChild(yearlyBox);
+    directionHost.appendChild(buildDirectionSection(yearDirections));
+
+    $('#resultHeading').textContent = `${profile.nineStar.honmeiStarName}の あなたの天命`;
+    $('#resultBirth').textContent = formatBirthLabel(y, m, d);
+
+    $('#loadingHost').hidden = true;
+    resultBody.hidden = false;
+  } finally {
+    isRendering = false;
   }
-  deck.appendChild(buildFortuneTabs(cardsById));
-
-  const directionHost = $('#directionHost');
-  directionHost.innerHTML = '';
-  const yearDirections = calcYearDirections(birthDate);
-  const yearlyBox = buildYearlySection(yearDirections.honmeiStar, yearDirections.kigakuYear);
-  if (yearlyBox) directionHost.appendChild(yearlyBox);
-  directionHost.appendChild(buildDirectionSection(yearDirections));
-
-  const teaserHost = $('#compositeHost');
-  teaserHost.innerHTML = '';
-  teaserHost.appendChild(buildCompositeTeaser(profile.nineStar.honmeiStarName));
-
-  $('#resultHeading').textContent = `${profile.nineStar.honmeiStarName}の あなたの天命`;
-  $('#resultBirth').textContent = formatBirthLabel(y, m, d);
-
-  $('#intro').hidden = true;
-  resultSection.hidden = false;
-  resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function populateDateSelects() {
@@ -529,6 +643,7 @@ function setupShare() {
 function init() {
   populateDateSelects();
   setupShare();
+  populateLoadingHost();
 
   $('#birthForm').addEventListener('submit', (e) => {
     e.preventDefault();

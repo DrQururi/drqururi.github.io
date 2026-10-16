@@ -192,18 +192,9 @@ button.btn{width:100%; font-family:inherit;}
 .direction__appHint{font-size:11px; color:var(--text-dim); margin:16px 0 10px;}
 
 .composite{margin-bottom:22px;}
-.composite__banner{
-  background:linear-gradient(135deg, rgba(201,168,76,0.2), rgba(180,140,255,0.2));
-  border:1px solid rgba(201,168,76,0.5); border-radius:14px 14px 0 0;
-  padding:18px; text-align:center;
-}
-.composite__stars{font-size:9px; color:rgba(201,168,76,0.8); letter-spacing:3px; margin-bottom:6px;}
-.composite__title{font-size:17px; color:#fff; letter-spacing:1.5px;}
-.composite__titleGold{font-size:17px; color:var(--gold-light); letter-spacing:1.5px; margin:2px 0;}
-.composite__sub{font-size:10px; color:var(--text-dim); margin-top:4px;}
 .composite__body{
-  background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.2); border-top:0;
-  border-radius:0 0 14px 14px; padding:18px;
+  background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.2);
+  border-radius:14px; padding:18px;
 }
 .composite__lockTitle{font-size:15px; color:var(--gold-light); letter-spacing:1px; text-align:center; margin-bottom:8px; font-weight:600;}
 .composite__lockDesc{font-size:11px; color:var(--text-dim); text-align:center; margin-bottom:14px; line-height:1.7;}
@@ -211,19 +202,59 @@ button.btn{width:100%; font-family:inherit;}
 .composite__item{display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-muted);}
 .composite__dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block;flex-shrink:0;}
 
-/* 無料プレビュー（総合性格・天職・人生の転機・恋愛の癖と傾向）2026-10-16 */
+/* 統合鑑定の有料アップセル（残り16項目）のratioバッジ。2026-10-16: 無料プレビュー4項目は
+   統合区画と内容が重なるため画面から外した（composite-free.mjsファイル自体は温存） */
 .ratioRow{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
 .ratioBadge{padding:5px 10px; border-radius:14px; font-size:9px;}
-.ratioBadge--free{background:rgba(100,220,150,0.1); border:1px solid rgba(100,220,150,0.3); color:rgba(100,220,150,0.9);}
 .ratioBadge--paid{background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light);}
-.freePreview{margin-bottom:16px;}
-.freePreview__card{
-  background:rgba(100,220,150,0.03); border-radius:14px; overflow:hidden; margin-bottom:10px;
+
+/* 区画1: 占術ごとの単独結果（区画2と見た目で明確に区別＝控えめな紫系の枠） */
+.soloSection{
+  background:rgba(255,255,255,0.02); border:1px solid rgba(180,140,255,0.18);
+  border-radius:16px; padding:18px; margin-bottom:22px;
 }
-.freePreview__head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px;}
-.freePreview__title{font-size:13px; letter-spacing:1.5px; font-weight:700;}
-.freePreview__free{font-size:9px; color:rgba(100,220,150,0.95); background:rgba(100,220,150,0.18); border:1px solid rgba(100,220,150,0.5); border-radius:10px; padding:2px 8px; font-weight:700; white-space:nowrap;}
-.freePreview__body{padding:4px 16px 14px; font-size:12.5px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0;}
+.soloSection__head{margin-bottom:14px;}
+.soloSection__title{font-size:14px; letter-spacing:1.5px; color:var(--purple-light); margin:0 0 6px; font-weight:700;}
+.soloSection__lead{font-size:11.5px; color:var(--text-dim); margin:0 0 6px;}
+.soloSection__note{font-size:10.5px; color:var(--text-faint); margin:0;}
+
+/* 区画2: 4つを統合した鑑定（区画1とは逆に金×紫のグラデーションで「特別感」を出す） */
+.integratedSection{
+  background:linear-gradient(160deg, rgba(201,168,76,0.1), rgba(180,140,255,0.08));
+  border:1px solid rgba(201,168,76,0.4); border-radius:18px; padding:20px; margin-bottom:22px;
+}
+.integratedSection__head{text-align:center; margin-bottom:16px;}
+.integratedSection__title{font-size:17px; letter-spacing:1.5px; color:var(--gold-light); margin:0 0 6px; font-weight:700;}
+.integratedSection__lead{font-size:11.5px; color:var(--text-soft); margin:0; line-height:1.8;}
+
+.integrated__blocks{display:flex; flex-direction:column; gap:14px; margin-bottom:18px;}
+.integratedBlock{background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.25); border-radius:14px; padding:16px;}
+.integratedBlock__title{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--gold); letter-spacing:1.5px; margin-bottom:6px;}
+.integratedBlock__pair{font-size:10.5px; color:var(--text-dim); letter-spacing:0.5px; margin-bottom:8px;}
+.integratedBlock__text{font-size:12.5px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0;}
+
+/* ローディング演出（診断ボタン押下から結果表示まで約5秒） */
+/* 注意: .loadingはdisplay:flexを持つため、hidden属性（UAデフォルトのdisplay:none）より
+   作者スタイルが優先されて効かなくなる。[hidden]を明示して確実に隠す。 */
+.loading{display:flex; flex-direction:column; align-items:center; padding:30px 8px 10px; gap:20px;}
+.loading[hidden]{display:none;}
+.loading__ringWrap{width:112px; height:112px;}
+.loading__ring{width:100%; height:100%; display:block; animation:loadingSpin 7s linear infinite;}
+@keyframes loadingSpin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+@media (prefers-reduced-motion: reduce){ .loading__ring{animation:none;} }
+.loading__track{width:100%; max-width:280px; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;}
+.loading__fill{height:100%; width:0%; background:linear-gradient(90deg, var(--gold), var(--purple)); border-radius:3px; transition:width 0.5s ease;}
+.loading__stages{display:flex; flex-direction:column; gap:11px; width:100%; max-width:300px;}
+.loading__stage{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-faint); transition:color 0.3s ease;}
+.loading__stageMark{
+  width:18px; height:18px; border-radius:50%; border:1px solid rgba(180,140,255,0.3);
+  display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;
+  color:transparent; transition:all 0.3s ease;
+}
+.loading__stage--active{color:var(--text-soft);}
+.loading__stage--active .loading__stageMark{border-color:var(--gold-light); box-shadow:0 0 0 3px rgba(201,168,76,0.18);}
+.loading__stage--done{color:var(--text-dim);}
+.loading__stage--done .loading__stageMark{background:var(--gold); border-color:var(--gold); color:var(--bg1);}
 
 .appLink{text-align:center; margin:26px 0;}
 .appLink__lead{font-size:11px; color:var(--text-dim); margin-bottom:10px;}
@@ -274,29 +305,37 @@ footer a{color:var(--text-dim);}
   </section>
 
   <section id="result" hidden>
-    <div class="resultHead">
-      <div class="resultHead__h" id="resultHeading"></div>
-      <div class="resultHead__sub" id="resultBirth"></div>
+    <div class="loading" id="loadingHost" hidden aria-live="polite">
+      <div class="loading__ringWrap" id="loadingRingWrap"></div>
+      <div class="loading__track"><div class="loading__fill" id="loadingFill"></div></div>
+      <div class="loading__stages" id="loadingStages"></div>
     </div>
 
-    <div class="deck" id="cardDeck"></div>
+    <div id="resultBody" hidden>
+      <div class="resultHead">
+        <div class="resultHead__h" id="resultHeading"></div>
+        <div class="resultHead__sub" id="resultBirth"></div>
+      </div>
 
-    <div id="directionHost"></div>
+      <div id="soloHost"></div>
 
-    <div id="compositeHost"></div>
+      <div id="integratedHost"></div>
 
-    <div class="appLink">
-      <p class="appLink__lead">吉方位のパワースポット地図・AIの統合鑑定はアプリで</p>
-      <a class="btn btn--gold" href="https://apps.apple.com/jp/app/id6791989590" target="_blank" rel="noopener">パワースポットマップを見る</a>
-    </div>
+      <div id="directionHost"></div>
 
-    <div class="shareBox">
-      <p class="shareBox__lead">結果をシェアする</p>
-      <a id="shareBtn" class="shareBtn" href="#" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        Xでシェア
-      </a>
-      <div class="resetRow"><button class="btn btn--text" id="resetBtn" type="button">もう一度診断する</button></div>
+      <div class="appLink">
+        <p class="appLink__lead">今月・今日の吉方位、人生の転機や結婚の時期、要注意の時期など、4つの命術を同時に読み解いた20項目の詳しい鑑定はアプリで</p>
+        <a class="btn btn--gold" href="https://apps.apple.com/jp/app/id6791989590" target="_blank" rel="noopener">パワースポットマップを見る</a>
+      </div>
+
+      <div class="shareBox">
+        <p class="shareBox__lead">結果をシェアする</p>
+        <a id="shareBtn" class="shareBtn" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Xでシェア
+        </a>
+        <div class="resetRow"><button class="btn btn--text" id="resetBtn" type="button">もう一度診断する</button></div>
+      </div>
     </div>
   </section>
 
