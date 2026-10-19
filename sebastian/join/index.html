@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>セバスちゃん グループへの招待</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f8;
+    --card: #ffffff;
+    --text: #1c1c1e;
+    --sub: #6b6b70;
+    --accent: #4a7dfc;
+    --accent-text: #ffffff;
+    --border: #e4e4e7;
+    --danger: #c23b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f11;
+      --card: #1c1c1e;
+      --text: #f2f2f3;
+      --sub: #9a9aa0;
+      --accent: #5b8bff;
+      --accent-text: #ffffff;
+      --border: #2e2e31;
+      --danger: #ff6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 14px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-text);
+    font-size: 26px;
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+  p.desc {
+    font-size: 14.5px;
+    color: var(--sub);
+    line-height: 1.7;
+    margin: 0 0 22px;
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+  .note {
+    font-size: 12px;
+    color: var(--sub);
+    line-height: 1.7;
+    margin-top: 18px;
+  }
+  .hint {
+    font-size: 13px;
+    color: var(--sub);
+    line-height: 1.6;
+    margin-top: 14px;
+    display: none;
+  }
+  .error-box .icon { background: var(--danger); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div id="valid-view" class="hidden">
+      <div class="icon">S</div>
+      <h1 id="title-ja">セバスちゃん グループへの招待</h1>
+      <p class="desc" id="desc-ja">セバスちゃんのグループに招待されています</p>
+      <button class="btn btn-primary" id="open-app-btn">アプリで開いて参加する</button>
+      <a class="btn btn-secondary" id="store-link" href="#">アプリをお持ちでない方</a>
+      <p class="hint" id="install-hint">インストール後、もう一度このリンクを開いてください</p>
+      <p class="note" id="note-ja">リンクを知っている人は誰でも参加できます。心当たりのない招待は開かないでください。</p>
+    </div>
+    <div id="invalid-view" class="hidden error-box">
+      <div class="icon">!</div>
+      <h1 id="invalid-title">招待リンクが正しくありません</h1>
+      <p class="desc" id="invalid-desc">リンクをもう一度確認してください。</p>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var lang = (navigator.language || '').toLowerCase();
+  var ja = lang.indexOf('ja') === 0 || lang === '';
+  // default to Japanese primary; if clearly non-Japanese, show English fallback text.
+
+  var STORE_URL = 'https://apps.apple.com/jp/app/id6791591198';
+
+  function getCode() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var c = params.get('c');
+      if (!c) return null;
+      if (!/^[A-Za-z0-9_-]{8,128}$/.test(c)) return null;
+      return c;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var code = getCode();
+  var validView = document.getElementById('valid-view');
+  var invalidView = document.getElementById('invalid-view');
+
+  if (!code) {
+    invalidView.classList.remove('hidden');
+    if (!ja) {
+      document.getElementById('invalid-title').textContent = 'This invite link is not valid';
+      document.getElementById('invalid-desc').textContent = 'Please check the link and try again.';
+    }
+    document.title = ja ? 'セバスちゃん グループへの招待' : 'Join Sebastian Group';
+    return;
+  }
+
+  validView.classList.remove('hidden');
+
+  if (!ja) {
+    document.getElementById('title-ja').textContent = 'Join the Sebastian Group';
+    document.getElementById('desc-ja').textContent = "You've been invited to join a Sebastian group.";
+    document.getElementById('open-app-btn').textContent = 'Open in App to Join';
+    document.getElementById('store-link').textContent = "Don't have the app?";
+    document.getElementById('install-hint').textContent = 'After installing, please open this link again.';
+    document.getElementById('note-ja').textContent = 'Anyone with this link can join. Do not open invites you do not recognize.';
+  }
+
+  function appURL() {
+    return 'sebastian://join?c=' + encodeURIComponent(code);
+  }
+
+  document.getElementById('store-link').href = STORE_URL;
+
+  var hint = document.getElementById('install-hint');
+  document.getElementById('open-app-btn').addEventListener('click', function () {
+    hint.style.display = 'block';
+    window.location.href = appURL();
+  });
+
+  // Try once automatically on load (iOS shows its own confirmation prompt).
+  window.setTimeout(function () {
+    window.location.href = appURL();
+  }, 300);
+})();
+</script>
+</body>
+</html>
