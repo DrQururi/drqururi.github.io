@@ -1,6 +1,7 @@
 // 天命診断サイト — 画面制御（生年月日はこの端末内だけで扱い、どこにも送信しない）
 import { buildFortuneProfile, buildFortuneExtras, calcYearDirections, DIR_ORDER, DIR_META } from './fortune-core.mjs';
 import { getNineStarReading } from './readings/nine-star.mjs';
+import { getNineStarExtra, TSUKI_STAR_NOTE, HONMEI_STAR_NOTE } from './readings/nine-star-extra.mjs';
 import { getNumerologyReading } from './readings/numerology.mjs';
 import { getAstrologyReading } from './readings/astrology.mjs';
 import { getFourPillarsReading } from './readings/four-pillars.mjs';
@@ -9,7 +10,13 @@ import { getStarSignOverlap, getNumStemOverlap, getSignStemOverlap } from './rea
 
 // 占術ID → その占術の鑑定データを引くための関数（profile全体を受け取る）
 const READING_LOOKUP = {
-  nine_star:    (profile) => getNineStarReading(profile.nineStar.honmeiStarName),
+  nine_star:    (profile) => {
+    const base = getNineStarReading(profile.nineStar.honmeiStarName);
+    if (!base) return null;
+    // 象意の広がり／日常のヒント／本命星の調べ方の注記（無料で見せる範囲のみ）
+    const extra = getNineStarExtra(profile.nineStar.honmeiStarName);
+    return { ...base, ...(extra ?? {}), note: HONMEI_STAR_NOTE };
+  },
   numerology:   (profile) => getNumerologyReading(profile.numerology.lifePath),
   astrology:    (profile) => getAstrologyReading(profile.astrology.sunSign),
   four_pillars: (profile) => getFourPillarsReading(profile.fourPillars.day.stem),
@@ -115,7 +122,11 @@ function buildReadingSection(reading) {
     { label: '本質・性格', text: reading.essence },
     { label: '相性のいいタイプ', text: reading.compatibility },
     { label: '人生の運気の流れ', text: reading.life_flow },
-  ];
+    // 九星気学のみ：象意の広がり／日常で意識しやすいヒント／本命星の調べ方（他の占術では未定義＝出さない）
+    reading.symbols ? { label: '象意の広がり', text: reading.symbols } : null,
+    reading.luckyHint ? { label: '日常で意識しやすいヒント', text: reading.luckyHint } : null,
+    reading.note ? { label: '本命星の調べ方', text: reading.note } : null,
+  ].filter(Boolean);
   items.forEach((item, i) => {
     const sec = el('div', { class: i === 0 ? 'card__readingSec' : 'card__readingSec card__readingSec--sep' });
     sec.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), item.label]));
@@ -140,6 +151,7 @@ function buildCard(fortune, userAttr, extras, reading) {
     el('div', { class: 'card__attrLabel', text: userAttr.label }),
     el('div', { class: 'card__attrValue', text: userAttr.value }),
     userAttr.sub ? el('div', { class: 'card__attrSub', text: userAttr.sub }) : null,
+    userAttr.subNote ? el('p', { class: 'card__attrNote', text: userAttr.subNote }) : null,
   ]);
   card.appendChild(head);
   card.appendChild(attrBox);
@@ -562,7 +574,7 @@ async function renderResult(y, m, d) {
     ]);
 
     const userAttrs = {
-      nine_star: { label: '本命星', value: profile.nineStar.honmeiStarName, sub: `月命星：${profile.nineStar.tsukiStarName}` },
+      nine_star: { label: '本命星', value: profile.nineStar.honmeiStarName, sub: `月命星：${profile.nineStar.tsukiStarName}`, subNote: TSUKI_STAR_NOTE },
       numerology: { label: '数秘術の数', value: String(profile.numerology.lifePath), sub: profile.numerology.ismaster ? 'マスターナンバー' : undefined },
       astrology: { label: '太陽星座', value: profile.astrology.sunSign, sub: `月星座：${profile.astrology.moonSign}` },
       four_pillars: { label: '命式', value: profile.fourPillars.day.combined, sub: `五行：${profile.fourPillars.year.stem}` },
