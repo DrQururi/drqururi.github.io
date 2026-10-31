@@ -53,8 +53,8 @@ function calcTsukiStar(honmeiStar, birthDate) {
   const setsuMonth = getSetsuMonth(birthDate.getMonth() + 1, birthDate.getDate());
   let baseForToraMonth;
   if ([1, 4, 7].includes(honmeiStar)) baseForToraMonth = 8;
-  else if ([2, 5, 8].includes(honmeiStar)) baseForToraMonth = 5;
-  else baseForToraMonth = 2;
+  else if ([2, 5, 8].includes(honmeiStar)) baseForToraMonth = 2;
+  else baseForToraMonth = 5;
 
   const offset = setsuMonth - 1;
   let star = baseForToraMonth - offset;
@@ -240,7 +240,7 @@ function calcMonthPillar(birthDate, yearStemIdx) {
 function calcDayPillar(birthDate) {
   const REF_JDN = toJDN(2000, 1, 1);
   const jdn = toJDN(birthDate.getFullYear(), birthDate.getMonth() + 1, birthDate.getDate());
-  const cycleIndex = ((30 + (jdn - REF_JDN)) % 60 + 60) % 60;
+  const cycleIndex = ((54 + (jdn - REF_JDN)) % 60 + 60) % 60;
   return makePillar(cycleIndex % 10, cycleIndex % 12);
 }
 
