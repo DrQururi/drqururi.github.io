@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="ja">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>天命診断｜4つの占術でわかるあなたの本質</title>
+<meta name="description" content="生年月日を入れるだけ。九星気学・数秘術・西洋占星術・四柱推命の4つの占術と、今後の運勢・総合占いの一部が無料で読める診断です。計算はこの端末の中だけで行い、どこにも送信しません。">
+<link rel="canonical" href="https://drqururi.github.io/tenmei/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="天命診断｜4つの占術でわかるあなたの本質">
+<meta property="og:description" content="九星気学・数秘術・西洋占星術・四柱推命。4つの占術を統合してあなたの本質がわかる無料診断です。">
+<meta property="og:url" content="https://drqururi.github.io/tenmei/">
+<meta property="og:site_name" content="天命診断">
+<meta property="og:image" content="https://drqururi.github.io/tenmei/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="天命診断｜4つの占術でわかるあなたの本質">
+<meta name="twitter:description" content="九星気学・数秘術・西洋占星術・四柱推命。4つの占術を統合してあなたの本質がわかる無料診断です。">
+<meta name="twitter:image" content="https://drqururi.github.io/tenmei/ogp.png">
+
+<style>
+
+:root{
+  --bg1:#0d0b2e; --bg2:#1a0533; --bg3:#0d1b4b;
+  --gold:#c9a84c; --gold-bright:#d4a800; --gold-light:#f5d78e;
+  --purple:#b39ddb; --purple-light:#c8b8e8;
+  --text-white:#ffffff; --body:#ece8f6; --text-soft:#e8d5f5; --text-muted:#cfc2ec; --text-dim:#c0b5db; --text-faint:#b0a4cc;
+  --card-bg:rgba(180,140,255,0.08); --card-border:rgba(180,140,255,0.2);
+  --green:#2eb478;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 15% 8%, rgba(180,140,255,0.10), transparent 40%),
+    radial-gradient(circle at 85% 18%, rgba(201,168,76,0.08), transparent 45%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+  color: var(--body);
+  font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
+  font-weight:400;
+  min-height:100vh;
+  line-height:1.8;
+  letter-spacing:0.04em;
+}
+.wrap{max-width:560px;margin:0 auto;padding:28px 18px 60px;}
+.brand{
+  text-align:center; font-size:11px; letter-spacing:3px; color:rgba(200,180,255,0.65);
+  margin-bottom:6px;
+}
+h1{
+  text-align:center; font-size:20px; letter-spacing:2px; color:var(--text-soft);
+  margin:0 0 6px; font-weight:600;
+}
+.lead{
+  text-align:center; font-size:12px; color:var(--text-dim); margin:0 0 22px; letter-spacing:0.5px;
+}
+.privacy{
+  background:rgba(180,140,255,0.08); border:1px solid rgba(180,140,255,0.2);
+  border-radius:12px; padding:12px 14px; font-size:11px; color:var(--text-muted);
+  margin-bottom:22px; line-height:1.7;
+}
+.privacy strong{color:var(--gold-light); font-weight:600;}
+
+form{
+  background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px;
+  padding:20px; display:flex; flex-direction:column; gap:14px;
+}
+.formRow{display:flex; flex-direction:column; gap:6px;}
+.formRow label{font-size:11px; letter-spacing:2px; color:var(--gold-light);}
+.selects{display:flex; gap:8px;}
+select{
+  flex:1; appearance:none; -webkit-appearance:none;
+  background:rgba(13,11,46,0.6); color:var(--text-soft);
+  border:1px solid rgba(180,140,255,0.3); border-radius:10px;
+  padding:12px 10px; font-size:14px; font-family:inherit;
+}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:14px; border-radius:999px; border:1px solid rgba(201,168,76,0.5);
+  background:linear-gradient(90deg, rgba(201,168,76,0.4), rgba(180,140,255,0.4));
+  color:var(--text-soft); font-size:14px; letter-spacing:2px; text-decoration:none;
+  font-weight:600; cursor:pointer;
+}
+.btn--gold{border-color:rgba(201,168,76,0.6); background:linear-gradient(90deg, rgba(201,168,76,0.55), rgba(180,140,255,0.3));}
+.btn--ghost-gold{
+  background:transparent; border:1px solid rgba(201,168,76,0.5); color:var(--gold-light);
+}
+.btn--text{background:transparent; border:none; color:var(--text-dim); text-decoration:underline; font-size:12px; letter-spacing:1px;}
+button.btn{width:100%; font-family:inherit;}
+
+
+#result{margin-top:8px;}
+.resultHead{text-align:center; margin-bottom:14px;}
+.resultHead__h{font-size:22px; line-height:1.5; color:var(--text-soft); letter-spacing:1px; margin:0 0 4px; font-weight:700; overflow-wrap:anywhere;}
+.resultHead__h:focus,.loading__title:focus,.hero__title:focus{outline:none;}
+.resultHead__sub{font-size:11px; color:var(--text-dim); letter-spacing:1px;}
+.tag,.chip,.badge{overflow-wrap:anywhere;}
+
+/* ── 固定目次バー（2段：章→小見出し）。アプリの TocBar と同じ構成 ── */
+.tocbar{position:sticky; top:0; z-index:20; background:rgb(13,11,46); margin:0 -18px 16px; padding:8px 18px 8px; border-bottom:1px solid rgba(180,140,255,0.18);}
+.tocbar__t1{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px;}
+.tocbar__t2{display:flex; gap:6px; margin-top:6px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+.tocbar__t2::-webkit-scrollbar{display:none;}
+.chip{
+  display:inline-flex; align-items:center; justify-content:center; text-align:center; min-height:44px; padding:6px 12px;
+  border-radius:9999px; border:1px solid var(--card-border); background:var(--card-bg); color:var(--text-muted);
+  font-family:inherit; font-size:13px; line-height:1.3; cursor:pointer; flex-shrink:0;
+}
+.tocbar__t1 .chip{flex-shrink:1; min-width:0; padding:6px 6px; font-size:12.5px;}
+.tocbar__t2 .chip{font-size:12.5px; white-space:nowrap; min-height:40px;}
+.chip--on{background:var(--gold); border-color:var(--gold); color:#0d0b2e; font-weight:600;}
+.chip:focus-visible,.btn:focus-visible,.moreBtn:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
+
+/* ── バッジ ── */
+.badge{display:inline-flex; align-items:center; gap:4px; border-radius:9999px; padding:2px 9px; font-size:11px; font-weight:600; letter-spacing:0.5px; border:1px solid transparent; white-space:nowrap; flex-shrink:0;}
+.badge--free{color:rgba(100,220,150,0.95); border-color:rgba(100,220,150,0.45); background:rgba(100,220,150,0.08);}
+.badge--paid{color:var(--gold-light); border-color:rgba(201,168,76,0.55); background:rgba(201,168,76,0.1);}
+.badge--part{color:var(--text-muted); border-color:rgba(180,140,255,0.4); background:rgba(180,140,255,0.08);}
+.badge--soon{color:#c9b6ff; border-color:rgba(180,140,255,0.55); background:rgba(180,140,255,0.12);}
+.paidRow--soon{border-color:rgba(180,140,255,0.4);}
+.lock{width:12px; height:12px; flex-shrink:0; color:var(--gold-light);}
+
+/* ── 天命まとめ・目次図 ── */
+.panel{background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:16px;}
+.panel__title{font-size:15px; font-weight:600; color:var(--gold-light); letter-spacing:1px; margin:0 0 4px;}
+.panel__lead{font-size:12px; color:var(--text-dim); margin:0 0 12px; line-height:1.7;}
+.sumGroup__h{font-size:12px; color:var(--gold); letter-spacing:1px; margin:12px 0 4px; font-weight:600;}
+.sumRow{display:block; width:100%; text-align:left; background:none; border:none; border-top:1px solid rgba(180,140,255,0.12); padding:10px 2px; font-family:inherit; color:inherit; cursor:pointer;}
+.sumRow__n{display:block; font-size:11px; color:var(--text-dim); margin-bottom:2px;}
+.sumRow__t{display:block; font-size:14px; color:#fff; font-weight:500; line-height:1.7;}
+details.diagram{margin-bottom:16px;}
+details.diagram>summary{list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; min-height:44px;}
+details.diagram>summary::-webkit-details-marker{display:none;}
+.diagram__toggle{font-size:12px; color:var(--text-dim);}
+.legend{display:flex; flex-wrap:wrap; gap:10px; font-size:11px; color:var(--text-muted); margin:6px 0 10px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.dot{width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; background:rgba(100,220,150,0.95);}
+.dgCh{margin-top:14px;}
+.dgCh__h{font-size:14px; font-weight:600; color:var(--text-soft); margin:0;}
+.dgCh__d{font-size:11.5px; color:var(--text-dim); margin:2px 0 6px; line-height:1.6;}
+.dgSub{display:block; width:100%; text-align:left; background:rgba(255,255,255,0.02); border:1px solid rgba(180,140,255,0.15); border-radius:12px; padding:10px 12px; margin-bottom:6px; font-family:inherit; color:inherit; cursor:pointer;}
+.dgSub__top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.dgSub__label{font-size:13.5px; font-weight:600; color:var(--text-soft);}
+.dgSub__items{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:6px; font-size:11.5px; color:var(--text-muted);}
+.dgSub__items span{display:inline-flex; align-items:center; gap:4px;}
+.dgSub__note{font-size:11.5px; color:var(--text-muted); margin-top:4px;}
+.dgFoot--top{margin:0 0 4px;}
+.dgFoot__free{color:rgba(100,220,150,0.95); font-weight:600;}
+.dgFoot{margin-top:12px; font-size:12px; color:var(--text-muted); line-height:1.7;}
+.dgFoot b{color:var(--gold-light);}
+
+/* ── 章 ── */
+.chapter{margin-bottom:26px;}
+.chapter__head{margin:0 0 12px; padding-top:6px;}
+.chapter__no{font-size:12px; color:var(--gold); letter-spacing:2px; font-weight:600;}
+.chapter__title{font-size:19px; font-weight:600; color:var(--text-soft); margin:2px 0 2px; letter-spacing:1px;}
+.chapter__desc{font-size:12px; color:var(--text-dim); margin:0;}
+.sub{margin-bottom:14px;}
+.sub__h{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--gold-light); margin:0 0 8px; letter-spacing:0.5px;}
+.bar{width:3px; height:16px; background:rgba(201,168,76,0.9); border-radius:2px; display:inline-block; flex-shrink:0;}
+.bar--green{background:var(--green);}
+
+/* ── 鑑定カード ── */
+.card{background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; overflow:hidden; margin-bottom:10px;}
+.card__head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 16px; background:rgba(180,140,255,0.16);}
+.card__title{display:flex; align-items:center; gap:8px; min-width:0;}
+.card__dot{width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0;}
+.card__name{font-size:15px; letter-spacing:1px; font-weight:600; color:var(--text-soft); overflow-wrap:anywhere;}
+.card__inner{padding:14px 16px 12px;}
+.card__explainBtn{border:1px solid rgba(180,140,255,0.4); border-radius:9999px; padding:6px 12px; min-height:32px; background:transparent; color:var(--text-muted); font-size:11px; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0;}
+.card__attr{margin-bottom:12px;}
+.card__attrLabel{font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:3px;}
+.card__attrValue{font-size:22px; letter-spacing:1px; font-weight:600; color:var(--text-soft); overflow-wrap:anywhere;}
+.card__attrSub{font-size:12.5px; letter-spacing:1px; color:var(--text-muted); margin-top:2px;}
+.card__attrNote{font-size:11px; color:var(--text-dim); line-height:1.7; white-space:pre-line; margin:4px 0 0;}
+.mini{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--gold); letter-spacing:1.5px; margin:14px 0 8px;}
+.tagrow{display:flex; flex-wrap:wrap; gap:5px;}
+.tag{border-radius:9999px; padding:4px 10px; font-size:11px; border:1px solid transparent;}
+.tag--keyword{background:rgba(180,140,255,0.1); border-color:rgba(180,140,255,0.25); color:var(--purple-light);}
+.tag--good{background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.3); color:var(--gold-light);}
+.tag--challenge{background:rgba(180,140,255,0.05); border-color:rgba(180,140,255,0.18); color:var(--text-faint);}
+.compatRow{display:flex; align-items:flex-start; gap:7px; margin-bottom:6px;}
+.compatMark{border-radius:9999px; padding:3px 8px; font-size:10px; flex-shrink:0;}
+.compatMark--good{background:rgba(201,168,76,0.15); color:var(--gold);}
+.compatMark--challenge{background:rgba(180,140,255,0.1); color:rgba(200,180,255,0.7);}
+.balance{display:flex; flex-direction:column; gap:5px;}
+.balance__row{display:flex; align-items:center; gap:8px;}
+.balance__el{width:16px; text-align:center; font-size:11px;}
+.balance__track{flex:1; height:7px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;}
+.balance__fill{height:7px; border-radius:3px; opacity:0.75;}
+.balance__count{width:20px; text-align:right; font-size:10px; opacity:0.8;}
+.card__explain{margin-top:12px; padding-top:12px; border-top:1px solid rgba(180,140,255,0.12);}
+.explainSec{margin-bottom:12px;}
+.explainSec__h{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--gold); letter-spacing:1.5px; margin-bottom:6px;}
+.explainSec__t{font-size:13px; color:var(--text-soft); line-height:1.9; margin:0;}
+
+/* ── 読みやすい本文（アプリの ReadableBlocks と同じ：結論=白の太字・「」=金・1文1段落） ── */
+.rb{margin-top:10px;}
+.rb__h{display:flex; align-items:center; gap:8px; margin:18px 0 8px; font-size:14px; font-weight:600; color:var(--gold-light); letter-spacing:0.5px;}
+.rb__h:first-child{margin-top:4px;}
+.rb__s{font-size:16px; line-height:1.8; color:var(--body); margin:0 0 10px; overflow-wrap:anywhere;}
+.rb__s--lead{color:#f7f4fc; font-weight:500; margin-bottom:13px;}
+.rb__s em{font-style:normal; color:#c9a84c; font-weight:600;}
+.rb__gap{height:11px;}
+.moreBtn{display:flex; width:100%; min-height:44px; margin-top:6px; border-radius:22px; align-items:center; justify-content:center; border:1px solid rgba(201,168,76,0.55); background:transparent; color:var(--gold-light); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; padding:0 16px;}
+
+/* ── 今後の運勢 ── */
+.monthMark{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+.monthMark__m{font-size:30px; font-weight:600; color:var(--gold-light); line-height:1;}
+.monthMark__t{font-size:15px; font-weight:600; color:var(--text-soft);}
+.foot{font-size:11.5px; color:var(--text-dim); line-height:1.7; margin:8px 0 0;}
+.nextLine{font-size:12.5px; color:var(--text-muted); margin:10px 0 0; line-height:1.7;}
+.picker{display:flex; gap:8px; margin:6px 0 8px;}
+.picker .chip{flex:1;}
+.decadeTitle{font-size:15px; font-weight:600; color:var(--gold-light); line-height:1.6; margin:4px 0 6px;}
+.beastName{font-size:26px; font-weight:600; color:var(--text-soft); letter-spacing:2px;}
+.beastRead{font-size:12px; color:var(--text-dim); margin-left:6px;}
+.cycleBar{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:3px; margin:10px 0 4px;}
+.cycleBar i{display:block; height:12px; border-radius:3px; opacity:0.6;}
+.cycleBar i.on{opacity:1; outline:2px solid #fff; outline-offset:1px;}
+.cycleLabels{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); font-size:11px; color:var(--text-dim); text-align:center;}
+.seasonBadge{display:inline-flex; align-items:center; border-radius:9999px; padding:3px 11px; font-size:12px; font-weight:600; color:#0d0b2e; margin:4px 0 6px;}
+
+/* ── 有料（名前だけ）行 ── */
+.paidList{margin-top:8px;}
+.paidList__h{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); margin:12px 0 6px;}
+.paidList__h::before,.paidList__h::after{content:""; flex:1; border-top:1px dashed rgba(201,168,76,0.4);}
+.paidRow{border:1px dashed rgba(201,168,76,0.35); border-radius:12px; padding:10px 12px; margin-bottom:6px; background:rgba(255,255,255,0.015);}
+.paidRow__top{display:flex; align-items:center; gap:8px; justify-content:space-between;}
+.paidRow__name{display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--text-soft); min-width:0; overflow-wrap:anywhere;}
+.paidRow__hint{font-size:12px; color:var(--text-muted); line-height:1.7; margin:4px 0 0 19px;}
+
+/* ── 総合占い（カテゴリ） ── */
+.cat{margin-bottom:18px;}
+.cat__count{font-size:11px; color:var(--text-dim); font-weight:400; margin-left:auto;}
+.compCard{border-radius:16px; overflow:hidden; margin-bottom:10px; border:1px solid;}
+.compCard__head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px;}
+.compCard__inner{padding:14px 16px 12px;}
+.compCard__quote{font-size:18px; line-height:1.7; text-align:center; font-weight:500; margin:2px 0 12px; overflow-wrap:anywhere;}
+
+/* ── 続きはアプリで ── */
+.cta{margin:14px 0 0; text-align:center; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:16px 14px; background:linear-gradient(160deg, rgba(201,168,76,0.1), rgba(180,140,255,0.06));}
+.cta__lead{font-size:13px; color:var(--text-soft); line-height:1.8; margin:0 0 12px;}
+.cta .btn{width:100%; min-height:48px;}
+.cta--end{margin:28px 0 16px; padding:20px 16px;}
+.cta--end .cta__title{font-size:16px; font-weight:600; color:var(--gold-light); margin:0 0 6px; letter-spacing:1px;}
+
+/* ── おまけ（Webだけの内容） ── */
+.extra{margin-bottom:22px;}
+.extra__tag{display:inline-block; font-size:11px; color:var(--text-dim); border:1px solid rgba(180,140,255,0.3); border-radius:9999px; padding:1px 10px; margin-bottom:6px;}
+.direction{background:rgba(46,180,120,0.05); border:1px solid rgba(100,220,150,0.2); border-radius:16px; padding:16px; margin-bottom:12px; text-align:center;}
+.direction__label{display:flex; align-items:center; justify-content:center; gap:7px; font-size:14px; font-weight:600; color:var(--green); letter-spacing:1px; margin-bottom:8px;}
+.direction__note{font-size:11.5px; color:var(--text-dim); margin:0 0 12px; line-height:1.7;}
+.direction__compass{display:flex; justify-content:center; margin-bottom:12px;}
+.direction__compass svg{max-width:100%; height:auto;}
+.direction__rowLabel{font-size:12px; letter-spacing:2px; margin:10px 0 6px;}
+.direction__rowLabel--good{color:var(--green);}
+.direction__rowLabel--bad{color:#e87c60;}
+.direction .tagrow{justify-content:center;}
+.direction__empty{font-size:12px; color:var(--text-dim);}
+.direction .paidList{text-align:left;}
+.integratedBlock{background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.25); border-radius:16px; padding:16px; margin-bottom:10px;}
+.integratedBlock__title{display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--gold-light); margin-bottom:6px;}
+.integratedBlock__pair{font-size:11px; color:var(--text-dim); margin-bottom:8px;}
+.integratedBlock__text{font-size:13px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0; overflow-wrap:anywhere;}
+
+/* ローディング演出（診断ボタン押下から結果表示まで約5秒） */
+/* 注意: .loadingはdisplay:flexを持つため、hidden属性（UAデフォルトのdisplay:none）より
+   作者スタイルが優先されて効かなくなる。[hidden]を明示して確実に隠す。 */
+.loading{display:flex; flex-direction:column; align-items:center; padding:30px 8px 10px; gap:20px;}
+.loading[hidden]{display:none;}
+.loading__ringWrap{width:112px; height:112px;}
+.loading__ring{width:100%; height:100%; display:block; animation:loadingSpin 7s linear infinite;}
+@keyframes loadingSpin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+@media (prefers-reduced-motion: reduce){ .loading__ring{animation:none;} }
+.loading__track{width:100%; max-width:280px; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;}
+.loading__fill{height:100%; width:0%; background:linear-gradient(90deg, var(--gold), var(--purple)); border-radius:3px; transition:width 0.5s ease;}
+.loading__stages{display:flex; flex-direction:column; gap:11px; width:100%; max-width:320px;}
+.loading__stage{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-faint); transition:color 0.3s ease;}
+.loading__stageMark{
+  width:18px; height:18px; border-radius:50%; border:1px solid rgba(180,140,255,0.3);
+  display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;
+  color:transparent; transition:all 0.3s ease;
+}
+.loading__stage--active{color:var(--text-soft);}
+.loading__stage--active .loading__stageMark{border-color:var(--gold-light); box-shadow:0 0 0 3px rgba(201,168,76,0.18);}
+.loading__stage--done{color:var(--text-dim);}
+.loading__stage--done .loading__stageMark{background:var(--gold); border-color:var(--gold); color:var(--bg1);}
+
+[hidden]{display:none!important;}
+
+/* ── 入口〜質問（アプリのオンボーディングと同じ流れ：価値を先に→1画面1問→計算→結果） ── */
+.screen{display:flex; flex-direction:column; min-height:calc(100vh - 90px); min-height:calc(100svh - 90px);}
+.screen__body{flex:1;}
+.hero{text-align:center; margin-bottom:22px;}
+.hero__title{font-size:30px; letter-spacing:4px; margin:2px 0 14px; color:var(--text-soft); font-weight:700;}
+.hero__catch span{display:block;}
+.hero__catch{font-size:18px; line-height:1.7; font-weight:500; color:#fff; margin:0 0 6px; overflow-wrap:anywhere;}
+.hero__four{font-size:12px; color:var(--gold-light); letter-spacing:1px; margin:0; line-height:1.7;}
+.sect__h{font-size:14px; letter-spacing:2px; color:var(--gold); font-weight:600; margin:0 0 10px; display:flex; align-items:center; gap:8px;}
+.valueCard{background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:14px 14px 14px; margin-bottom:12px;}
+.valueCard__no{font-size:11px; color:var(--gold); letter-spacing:2px; font-weight:700;}
+.valueCard__h{font-size:17px; font-weight:600; color:var(--text-soft); margin:0 0 2px; letter-spacing:1px;}
+.valueCard__d{font-size:12.5px; color:var(--text-muted); margin:0 0 10px; line-height:1.7;}
+.sample{position:relative; border:1px dashed rgba(180,140,255,0.3); border-radius:12px; padding:26px 10px 10px; background:rgba(13,11,46,0.45);}
+.sample__tag{position:absolute; top:6px; right:8px; font-size:10px; color:var(--text-dim); border:1px solid rgba(180,140,255,0.35); border-radius:9999px; padding:0 8px; line-height:17px; letter-spacing:1px;}
+.tiles{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;}
+.tile{background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:9px 12px; min-width:0;}
+.tile__l{font-size:11px; letter-spacing:1.5px; color:var(--text-dim); margin-bottom:2px;}
+.tile__v{font-size:19px; font-weight:700; color:var(--text-soft); letter-spacing:1px; overflow-wrap:anywhere; line-height:1.4;}
+.tiles--lg{gap:10px; margin-bottom:16px;}
+.tiles--lg .tile{padding:12px 14px;}
+.tiles--lg .tile__v{font-size:22px;}
+.sample .decadeTitle{font-size:13px; margin:0 0 8px;}
+.sample .monthMark{margin-bottom:10px;}
+.sample .monthMark__m{font-size:24px;}
+.sample .monthMark__t{font-size:13px;}
+.sample__lbl{font-size:11px; color:var(--text-dim); letter-spacing:1px; margin:10px 0 2px;}
+.decadeBand{display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; margin:0 0 4px;}
+.decadeBand i{display:block; height:12px; border-radius:3px; background:rgba(180,140,255,0.35); opacity:0.6;}
+.decadeBand i.on{background:var(--gold); opacity:1; outline:2px solid #fff; outline-offset:1px;}
+.sample .cycleBar{margin:4px 0 4px;}
+.miniRow{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border-radius:10px; border:1px solid; margin-bottom:6px;}
+.miniRow:last-child{margin-bottom:0;}
+.miniRow__name{display:flex; align-items:center; gap:8px; min-width:0; font-size:14px; font-weight:600; color:var(--text-soft);}
+.dock{position:sticky; bottom:0; z-index:15; margin:16px -18px 0; padding:22px 18px calc(12px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, rgba(13,11,46,0) 0, rgba(13,11,46,0.97) 22px, rgb(13,11,46) 100%);}
+.screen:not(#screen-0) .dock{background:none;}
+.dock__note{font-size:11px; color:var(--text-muted); text-align:center; margin:0 0 8px; line-height:1.7;}
+.dock .btn{width:100%; min-height:52px; font-size:15px;}
+.btn[disabled]{opacity:0.4; cursor:default;}
+.qtop{display:flex; align-items:center; gap:10px; margin:-6px 0 18px;}
+.qtop__back{min-width:60px; min-height:44px; padding:0 8px 0 0; background:none; border:none; color:var(--text-muted); font-size:14px; font-family:inherit; cursor:pointer; text-align:left;}
+.pbar{flex:1; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;}
+.pbar__fill{height:100%; background:linear-gradient(90deg, var(--gold), var(--purple)); border-radius:3px;}
+.qtop__n{min-width:60px; text-align:right; font-size:12px; color:var(--text-faint);}
+.qtitle{font-size:22px; line-height:1.5; font-weight:700; color:var(--gold-light); margin:0; overflow-wrap:anywhere;}
+.qtitle:focus{outline:none;}
+.quse{font-size:13px; line-height:1.8; color:var(--text-dim); margin:8px 0 20px;}
+.textInput{width:100%; background:rgba(13,11,46,0.6); color:#fff; border:1px solid rgba(180,140,255,0.3); border-radius:12px; padding:14px; font-size:18px; font-family:inherit;}
+.textInput::placeholder{color:var(--text-faint);}
+.textInput:focus-visible,select:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
+.qnote{font-size:12px; color:var(--text-faint); text-align:right; margin:6px 0 0;}
+.birthBox .selects select{font-size:16px; padding:14px 8px; text-align:center;}
+.choices{display:flex; flex-direction:column; gap:10px;}
+.choice{display:flex; align-items:center; justify-content:center; width:100%; min-height:56px; padding:8px 14px; border-radius:14px; border:1.5px solid var(--card-border); background:var(--card-bg); color:var(--text-soft); font-size:17px; font-family:inherit; cursor:pointer; overflow-wrap:anywhere;}
+.choice[aria-checked="true"]{border-color:var(--gold); background:rgba(201,168,76,0.16); color:var(--gold-light); font-weight:600;}
+.choice:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
+
+/* ── 結果の先頭：注目カード ── */
+.focusCard{border:1px solid rgba(201,168,76,0.55); background:linear-gradient(160deg, rgba(201,168,76,0.13), rgba(180,140,255,0.06)); border-radius:16px; padding:14px 16px 12px; margin-bottom:16px;}
+.focusCard__h{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--gold-light); margin:0 0 8px; overflow-wrap:anywhere;}
+.focusCard__q{font-size:18px; line-height:1.7; font-weight:500; text-align:center; margin:2px 0 10px; color:var(--gold-light); overflow-wrap:anywhere;}
+.focusCard .rb__s{margin-bottom:8px;}
+.loading__title{font-size:20px; line-height:1.6; color:var(--gold-light); font-weight:600; text-align:center; margin:0; overflow-wrap:anywhere;}
+.loading__sub{font-size:12px; color:var(--text-dim); text-align:center; margin:-12px 0 0;}
+.loading__stageLabel{flex:1; min-width:0;}
+.loading__stageValue{color:var(--gold-light); font-weight:700; font-size:14px; opacity:0; transition:opacity 0.3s ease; white-space:nowrap;}
+.loading__stage--done .loading__stageValue{opacity:1;}
+.loading__stage{font-size:14px;}
+
+.shareBox{text-align:center; margin:22px 0;}
+.shareBox__lead{font-size:11px; color:var(--text-dim); margin-bottom:10px;}
+.shareBtn{
+  display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:999px;
+  border:1px solid rgba(232,213,245,0.3); background:rgba(255,255,255,0.04);
+  color:var(--text-soft); font-size:13px; letter-spacing:1.5px; text-decoration:none; font-weight:600;
+}
+.shareBtn svg{width:15px;height:15px;}
+
+.resetRow{text-align:center; margin-top:10px;}
+
+footer{
+  text-align:center; margin-top:40px; padding-top:20px; border-top:1px solid rgba(180,140,255,0.12);
+  font-size:10px; color:var(--text-faint); line-height:2;
+}
+footer a{color:var(--text-dim);}
+
+/* ═══ 夜空×金のデザイン（2026-11-05 博士「金文字でハイライト・もっとキャッチーに」）═══
+   ルール：外部フォント・画像なし／星はCSSの放射グラデ2層だけ／JSのrAFループなし／絵文字・記号文字なし／
+   動きは transform と opacity 中心。prefers-reduced-motion では末尾で全部止める。 */
+:root{
+  --g1:#fff3c4; --g2:#e8c766; --g3:#c9973a; --g4:#f6e27a;
+  --gold-grad:linear-gradient(100deg,var(--g1) 0%,var(--g2) 32%,var(--g3) 58%,var(--g4) 82%,var(--g1) 100%);
+  --mincho:"Hiragino Mincho ProN","Yu Mincho",serif;
+}
+h2,h3,h4{font-weight:600;}
+.rb__s,.valueCard__d,.quse,.focusCard__q,.sumRow__t{text-wrap:pretty;}
+
+/* 金のグラデーション文字（.gt）。非対応ブラウザは単色の金で読める */
+.gt,.hero__title{color:var(--g2);}
+.gt{font-style:normal;}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .gt,.hero__title,.tile__v,.loading__stageValue{
+    background-image:var(--gold-grad); background-size:100% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  }
+}
+.gt{font-weight:700;}
+
+/* ── 星空（背景2層。画像なし・CSSの点だけ）── */
+body::before,body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:0;}
+body::before{
+  background-image:
+    radial-gradient(1.2px 1.2px at 22px 34px,#fff 50%,transparent 100%),
+    radial-gradient(1px 1px at 96px 128px,rgba(255,243,196,.95) 50%,transparent 100%),
+    radial-gradient(1.4px 1.4px at 170px 66px,#fff 50%,transparent 100%),
+    radial-gradient(1px 1px at 214px 196px,rgba(255,243,196,.9) 50%,transparent 100%),
+    radial-gradient(1px 1px at 58px 214px,#fff 50%,transparent 100%);
+  background-size:250px 250px; opacity:.4; animation:twinkleA 5.5s ease-in-out infinite alternate;
+}
+body::after{
+  background-image:
+    radial-gradient(1.3px 1.3px at 40px 90px,rgba(255,243,196,.95) 50%,transparent 100%),
+    radial-gradient(1px 1px at 150px 30px,#fff 50%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 260px 150px,#fff 50%,transparent 100%),
+    radial-gradient(1px 1px at 120px 250px,rgba(255,243,196,.9) 50%,transparent 100%),
+    radial-gradient(1px 1px at 300px 270px,#fff 50%,transparent 100%);
+  background-size:340px 340px; background-position:70px 40px; opacity:.2; animation:twinkleB 8s ease-in-out -3s infinite alternate;
+}
+@keyframes twinkleA{from{opacity:.16;} to{opacity:.5;}}
+@keyframes twinkleB{from{opacity:.4;} to{opacity:.1;}}
+.wrap{position:relative; z-index:1;}
+
+/* ── 入口ヒーロー ── */
+.hero{margin-bottom:26px;}
+.hero__stage{position:relative; display:flex; justify-content:center; align-items:center; height:236px; margin:0 0 4px;}
+.hero__orbit{position:absolute; left:50%; top:50%; width:252px; height:252px; margin:-126px 0 0 -126px; pointer-events:none; overflow:visible;}
+.hero__orbitSpin{transform-origin:50% 50%; animation:orbitSpin 48s linear infinite;}
+@keyframes orbitSpin{to{transform:rotate(360deg);}}
+.hero__title{
+  position:relative; font-family:var(--mincho); font-size:46px; font-weight:700; letter-spacing:.14em; line-height:1.3;
+  padding-left:.14em; margin:0; display:inline-block;
+  filter:drop-shadow(0 0 16px rgba(232,199,102,.35));
+}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .hero__title{
+    background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%),var(--gold-grad);
+    background-size:260% 100%,100% 100%; background-repeat:no-repeat; background-position:140% 0,0 0;
+    animation:shimmer 6s ease-in-out infinite;
+  }
+}
+@keyframes shimmer{0%{background-position:140% 0,0 0;} 55%,100%{background-position:-40% 0,0 0;}}
+.hero__catch{position:relative; z-index:0; font-size:19px; line-height:1.75; font-weight:500; color:#f7f4fc; margin:0 0 8px;}
+.hero__catch .mk{position:relative; display:inline-block; font-weight:700;}
+.hero__catch .mk::after{
+  content:""; position:absolute; left:-2px; right:-2px; bottom:.04em; height:.36em; z-index:-1; border-radius:2px;
+  background:linear-gradient(90deg,rgba(232,199,102,0),rgba(232,199,102,.5) 14%,rgba(232,199,102,.5) 86%,rgba(232,199,102,0));
+  transform-origin:left center; animation:markDraw .9s .5s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes markDraw{from{transform:scaleX(0);} to{transform:scaleX(1);}}
+.hero__four{font-size:12.5px; color:var(--g1); letter-spacing:.08em;}
+.sect__h{font-size:15px; color:var(--g2); letter-spacing:.12em;}
+.sect__h .bar{width:3px; height:18px; background:linear-gradient(180deg,var(--g1),var(--g3));}
+
+/* ── 「診断でわかること」3枚（金の枠線・番号・グロー） ── */
+.valueCard{position:relative; border:none; padding:16px 15px 15px; box-shadow:0 0 26px rgba(232,199,102,.10),0 10px 28px rgba(0,0,0,.28); background:linear-gradient(165deg,rgba(232,199,102,.07),rgba(180,140,255,.07) 55%,rgba(180,140,255,.05));}
+.valueCard::before,.focusCard::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.2px; pointer-events:none;
+  background:linear-gradient(160deg,rgba(255,243,196,.95),rgba(201,151,58,.55) 22%,rgba(180,140,255,.28) 60%,rgba(232,199,102,.5));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+}
+.valueCard__top{display:flex; align-items:center; gap:12px; margin:0 0 4px;}
+.valueCard__no{font-family:var(--mincho); font-size:38px; line-height:1; letter-spacing:.02em; font-weight:700; flex-shrink:0; padding-right:12px; border-right:1px solid rgba(232,199,102,.35);}
+.valueCard__h{font-size:17px; line-height:1.5; font-weight:600; letter-spacing:.05em; margin:0;}
+.valueCard__d{margin:2px 0 11px; font-size:13px;}
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);}
+.reveal.is-in{opacity:1; transform:none;}
+.tile{border-color:rgba(232,199,102,.28); background:linear-gradient(160deg,rgba(232,199,102,.08),rgba(180,140,255,.07));}
+.tile__v{display:inline-block; max-width:100%; letter-spacing:.06em; line-height:1.45;}
+.tile__l{color:var(--text-muted); letter-spacing:.1em;}
+
+/* ── ボタン：金グラデ＋光が斜めに走る＋右に細い矢印 ── */
+.btn--gold{
+  position:relative; overflow:hidden; gap:10px; color:#2a1a04; font-weight:600; letter-spacing:.1em; border:1px solid rgba(255,243,196,.8);
+  background:linear-gradient(100deg,#f6e27a 0%,#e6bf55 45%,#c9973a 100%);
+  box-shadow:0 0 0 1px rgba(201,151,58,.35),0 6px 20px rgba(232,199,102,.32),inset 0 1px 0 rgba(255,255,255,.55);
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.btn--gold::before{
+  content:""; position:absolute; top:0; bottom:0; left:-60%; width:36%; pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent); transform:translateX(0) skewX(-20deg);
+  animation:btnShine 3.8s ease-in-out infinite;
+}
+@keyframes btnShine{0%{transform:translateX(0) skewX(-20deg);} 38%,100%{transform:translateX(520%) skewX(-20deg);}}
+.btn--gold::after{
+  content:""; flex-shrink:0; width:22px; height:12px; background-color:currentColor;
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M1 6h19M15 1l5 5-5 5'/></svg>") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M1 6h19M15 1l5 5-5 5'/></svg>") center/contain no-repeat;
+  transition:transform .2s ease;
+}
+.btn--gold:hover::after{transform:translateX(3px);}
+.btn--gold:active{transform:scale(.98);}
+.dock .btn{background-color:transparent; min-height:54px; font-size:16px;}
+.btn--gold[disabled]{opacity:1; filter:saturate(.25) brightness(.55); box-shadow:none; cursor:default;}
+.btn--gold[disabled]::before{display:none;}
+.btn--gold:focus-visible{outline:2px solid #fff; outline-offset:3px;}
+.dock__note{letter-spacing:.04em;}
+
+/* ── 質問画面：金の進捗バー・選んだ選択肢 ── */
+.pbar{height:7px;}
+.pbar__fill{background:linear-gradient(90deg,var(--g3),var(--g4) 60%,var(--g1)); box-shadow:0 0 10px rgba(232,199,102,.55);}
+.choice{position:relative; transition:border-color .2s,background .2s,box-shadow .2s;}
+.choice[aria-checked="true"]{
+  border-color:var(--g2); color:var(--g1); font-weight:600;
+  background:linear-gradient(160deg,rgba(232,199,102,.26),rgba(232,199,102,.10));
+  box-shadow:0 0 0 3px rgba(232,199,102,.14),0 0 20px rgba(232,199,102,.22);
+}
+.choice[aria-checked="true"]::after{
+  content:""; position:absolute; right:14px; top:50%; width:20px; height:20px; margin-top:-10px; border-radius:50%;
+  background:var(--g2) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%232a1a04' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5.5 10.5l3 3 6-7'/></svg>") center/contain no-repeat;
+}
+.qtitle{letter-spacing:.05em;}
+
+/* ── 計算中：値が出る瞬間に金文字でポンと拡大→戻る ── */
+.loading__title{letter-spacing:.06em;}
+.loading__fill{background:linear-gradient(90deg,var(--g3),var(--g4) 60%,var(--g1)); box-shadow:0 0 10px rgba(232,199,102,.5);}
+.loading__stageValue{display:inline-block; transform-origin:right center;}
+.loading__stage--done .loading__stageValue{animation:valuePop .42s cubic-bezier(.2,.9,.3,1.4) both;}
+@keyframes valuePop{0%{transform:scale(.55); opacity:0; filter:drop-shadow(0 0 0 rgba(232,199,102,0));} 55%{transform:scale(1.3); opacity:1; filter:drop-shadow(0 0 10px rgba(246,226,122,.8));} 100%{transform:scale(1); opacity:1; filter:drop-shadow(0 0 4px rgba(232,199,102,.35));}}
+.loading__stageMark{position:relative;}
+.loading__stage--done .loading__stageMark{background:linear-gradient(135deg,var(--g4),var(--g3)); border-color:var(--g2);}
+.loading__stage--done .loading__stageMark::after{content:""; position:absolute; left:5px; top:3px; width:5px; height:8px; border:solid #2a1a04; border-width:0 2px 2px 0; transform:rotate(45deg);}
+
+/* ── 結果の先頭 ── */
+.resultHead__h{letter-spacing:.06em;}
+.resultHead__h .gt{font-size:1.12em;}
+.focusCard{position:relative; border:none; padding:15px 17px 13px; box-shadow:0 0 30px rgba(232,199,102,.24),0 0 0 1px rgba(232,199,102,.08),0 12px 30px rgba(0,0,0,.3);}
+.focusCard::before{padding:1.5px; background:linear-gradient(150deg,var(--g1),rgba(201,151,58,.7) 35%,rgba(246,226,122,.9) 70%,rgba(201,151,58,.6));}
+.tiles--lg .tile__v{font-size:23px;}
+
+/* ── 目次帯：背景は画面の端から端まで、中のタブはカード列と同じ幅で中央 ──
+   box-shadowの広がりは横スクロール幅に入らない（100vw＋負マージンはスクロールバー幅ではみ出すので使わない） */
+.tocbar{border-bottom:none; box-shadow:0 0 0 100vmax rgb(13,11,46),0 1px 0 100vmax rgba(180,140,255,0.18); clip-path:inset(0 -100vmax -1px -100vmax);}
+.chip--on{background:linear-gradient(100deg,var(--g4),var(--g3)); border-color:var(--g1); color:#2a1a04;}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important; transition:none!important;}
+  .reveal{opacity:1; transform:none;}
+  body::before{opacity:.35;} body::after{opacity:.18;}
+  .btn--gold::before{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="onboard">
+
+    <!-- S0 入口 -->
+    <div class="screen" id="screen-0" data-screen="0">
+      <div class="screen__body">
+        <div class="hero">
+          <div class="brand">パワースポットマップ</div>
+          <div class="hero__stage">
+            <svg class="hero__orbit" viewBox="0 0 252 252" aria-hidden="true" focusable="false">
+              <circle cx="126" cy="126" r="122" fill="none" stroke="rgba(232,199,102,0.34)" stroke-width="0.8"/>
+              <circle cx="126" cy="126" r="92" fill="none" stroke="rgba(232,199,102,0.2)" stroke-width="0.7" stroke-dasharray="2 6"/>
+              <g class="hero__orbitSpin">
+                <circle cx="126" cy="4" r="9" fill="rgba(232,199,102,0.16)"/><circle cx="126" cy="4" r="3.2" fill="#f6e27a"/>
+                <circle cx="248" cy="126" r="9" fill="rgba(232,199,102,0.16)"/><circle cx="248" cy="126" r="3.2" fill="#f6e27a"/>
+                <circle cx="126" cy="248" r="9" fill="rgba(232,199,102,0.16)"/><circle cx="126" cy="248" r="3.2" fill="#f6e27a"/>
+                <circle cx="4" cy="126" r="9" fill="rgba(232,199,102,0.16)"/><circle cx="4" cy="126" r="3.2" fill="#f6e27a"/>
+              </g>
+            </svg>
+            <h1 class="hero__title" id="heroTitle" tabindex="-1">天命診断</h1>
+          </div>
+          <p class="hero__catch"><span>生年月日ひとつで、</span><span><em class="mk gt">4つの占い</em>があなたを読み解く</span></p>
+          <p class="hero__four">九星気学・数秘術・西洋占星術・四柱推命</p>
+        </div>
+        <h2 class="sect__h"><span class="bar"></span>診断でわかること</h2>
+        <div id="valueCards"></div>
+      </div>
+      <div class="dock">
+        <p class="dock__note">無料・登録なし・約1分<br>生年月日はこの端末の中だけで計算し、送信しません</p>
+        <button type="button" class="btn btn--gold" id="startBtn">無料で診断をはじめる</button>
+      </div>
+    </div>
+
+    <!-- S1 呼び名（任意） -->
+    <div class="screen" id="screen-1" data-screen="1" hidden>
+      <div class="screen__body">
+        <div class="qtop">
+          <button type="button" class="qtop__back" data-back>&lsaquo; 戻る</button>
+          <div class="pbar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="質問の進み具合"><div class="pbar__fill" style="width:25%"></div></div>
+          <span class="qtop__n">1 / 4</span>
+        </div>
+        <h2 class="qtitle" tabindex="-1">呼び名を教えてください（任意）</h2>
+        <p class="quse">結果の中で「〇〇さん」とお呼びするために使います。この端末の中だけで使い、送信しません。</p>
+        <input class="textInput" id="nickname" type="text" maxlength="10" placeholder="ニックネーム（任意）" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="お呼びする名前（任意）">
+        <p class="qnote"><span id="nickCount">0</span>/10　空のままでも進めます</p>
+      </div>
+      <div class="dock"><button type="button" class="btn btn--gold" id="next1" data-next>スキップ</button></div>
+    </div>
+
+    <!-- S2 生年月日 -->
+    <div class="screen" id="screen-2" data-screen="2" hidden>
+      <div class="screen__body">
+        <div class="qtop">
+          <button type="button" class="qtop__back" data-back>&lsaquo; 戻る</button>
+          <div class="pbar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="質問の進み具合"><div class="pbar__fill" style="width:50%"></div></div>
+          <span class="qtop__n">2 / 4</span>
+        </div>
+        <h2 class="qtitle" tabindex="-1">生年月日を教えてください</h2>
+        <p class="quse">あなたがどんな人か、今が運のいい時期かを、生まれた日から計算します。</p>
+        <div class="birthBox">
+          <div class="formRow">
+            <label for="birthYear">生年月日</label>
+            <div class="selects">
+              <select id="birthYear" required aria-label="生まれた年"></select>
+              <select id="birthMonth" required aria-label="生まれた月"></select>
+              <select id="birthDay" required aria-label="生まれた日"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dock"><button type="button" class="btn btn--gold" id="next2" data-next>次へ</button></div>
+    </div>
+
+    <!-- S3 性別 -->
+    <div class="screen" id="screen-3" data-screen="3" hidden>
+      <div class="screen__body">
+        <div class="qtop">
+          <button type="button" class="qtop__back" data-back>&lsaquo; 戻る</button>
+          <div class="pbar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="3" aria-label="質問の進み具合"><div class="pbar__fill" style="width:75%"></div></div>
+          <span class="qtop__n">3 / 4</span>
+        </div>
+        <h2 class="qtitle" tabindex="-1">性別を教えてください</h2>
+        <p class="quse">「10年ごとの運の流れ」は男性と女性で数え方が変わるので、その計算に使います。</p>
+        <div class="choices" id="genderChoices" role="radiogroup" aria-label="性別"></div>
+      </div>
+      <div class="dock"><button type="button" class="btn btn--gold" id="next3" data-next disabled>次へ</button></div>
+    </div>
+
+    <!-- S4 いま気になること -->
+    <div class="screen" id="screen-4" data-screen="4" hidden>
+      <div class="screen__body">
+        <div class="qtop">
+          <button type="button" class="qtop__back" data-back>&lsaquo; 戻る</button>
+          <div class="pbar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-label="質問の進み具合"><div class="pbar__fill" style="width:100%"></div></div>
+          <span class="qtop__n">4 / 4</span>
+        </div>
+        <h2 class="qtitle" tabindex="-1">いま気になることは何ですか？</h2>
+        <p class="quse">選んだことの結果を、いちばん上に出すために使います。</p>
+        <div class="choices" id="concernChoices" role="radiogroup" aria-label="いま気になること"></div>
+      </div>
+      <div class="dock"><button type="button" class="btn btn--gold" id="next4" data-next disabled>診断結果を見る</button></div>
+    </div>
+  </section>
+
+  <section id="result" hidden>
+    <div class="loading" id="loadingHost" hidden aria-live="polite">
+      <h2 class="loading__title" id="loadingTitle" tabindex="-1">あなたの星を読み解いています</h2>
+      <p class="loading__sub">この端末の中で計算しています</p>
+      <div class="loading__ringWrap" id="loadingRingWrap"></div>
+      <div class="loading__track"><div class="loading__fill" id="loadingFill"></div></div>
+      <div class="loading__stages" id="loadingStages"></div>
+    </div>
+
+    <div id="resultBody" hidden>
+      <div class="resultHead">
+        <h1 class="resultHead__h" id="resultHeading" tabindex="-1"></h1>
+        <div class="resultHead__sub" id="resultBirth"></div>
+      </div>
+      <div id="tilesHost"></div>
+      <div id="focusHost"></div>
+
+      <nav class="tocbar" id="tocBar" aria-label="天命の目次">
+        <div class="tocbar__t1" id="tocT1"></div>
+        <div class="tocbar__t2" id="tocT2"></div>
+      </nav>
+
+      <div id="summaryHost"></div>
+      <div id="diagramHost"></div>
+      <div id="chaptersHost"></div>
+      <div id="extraHost"></div>
+      <div id="endCtaHost"></div>
+
+      <div class="shareBox">
+        <p class="shareBox__lead">結果をシェアする</p>
+        <a id="shareBtn" class="shareBtn" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Xでシェア
+        </a>
+        <div class="resetRow"><button class="btn btn--text" id="resetBtn" type="button">最初からやり直す</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    天命診断は「パワースポットマップ」アプリの無料Web版です。計算はすべて端末内で行われます。<br>
+    <a href="https://drqururi.github.io/uralog-legal/" target="_blank" rel="noopener">プライバシーポリシー・利用規約</a>
+    ／
+    <a href="https://apps.apple.com/jp/app/id6791989590" target="_blank" rel="noopener">App Store</a>
+  </footer>
+</div>
+<script type="module" src="./tenmei.js"></script>
+</body>
+</html>
