@@ -65,7 +65,7 @@ export function buildTiles(profile) {
 const SHARE_TEXT_DEFAULT = '天命診断をやってみた';
 export function buildShareText(honmeiStarName) {
   if (!honmeiStarName) return SHARE_TEXT_DEFAULT;
-  return `天命診断をやってみたら「${honmeiStarName}」タイプでした。生年月日だけで4つの占いをまとめて診断してくれる #天命診断`;
+  return `天命診断をやってみたら「${honmeiStarName}」タイプでした。4つの占いをまとめて診断してくれる #天命診断`;
 }
 export function buildShareIntent(honmeiStarName, url) {
   return `https://x.com/intent/post?text=${encodeURIComponent(buildShareText(honmeiStarName))}&url=${encodeURIComponent(url)}`;
