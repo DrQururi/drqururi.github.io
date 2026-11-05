@@ -237,10 +237,15 @@ function calcMonthPillar(birthDate, yearStemIdx) {
   return makePillar(stemIdx, branchIdx);
 }
 
-function calcDayPillar(birthDate) {
+// 日柱番号 0(甲子)〜59(癸亥)。アプリ lib/powerspot/fortune/four-pillars.ts の dayPillarIndex と同値（神獣の計算で使う）
+export function dayPillarIndex(birthDate) {
   const REF_JDN = toJDN(2000, 1, 1);
   const jdn = toJDN(birthDate.getFullYear(), birthDate.getMonth() + 1, birthDate.getDate());
-  const cycleIndex = ((54 + (jdn - REF_JDN)) % 60 + 60) % 60;
+  return ((54 + (jdn - REF_JDN)) % 60 + 60) % 60;
+}
+
+function calcDayPillar(birthDate) {
+  const cycleIndex = dayPillarIndex(birthDate);
   return makePillar(cycleIndex % 10, cycleIndex % 12);
 }
 

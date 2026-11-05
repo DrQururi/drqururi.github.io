@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>天命診断｜4つの占術でわかるあなたの本質</title>
-<meta name="description" content="生年月日を入れるだけ。九星気学・数秘術・西洋占星術・四柱推命、4つの占術であなたの本質がわかる無料診断です。計算はこの端末の中だけで行い、どこにも送信しません。">
+<meta name="description" content="生年月日を入れるだけ。九星気学・数秘術・西洋占星術・四柱推命の4つの占術と、今後の運勢・総合占いの一部が無料で読める診断です。計算はこの端末の中だけで行い、どこにも送信しません。">
 <link rel="canonical" href="https://drqururi.github.io/tenmei/">
 
 <meta property="og:type" content="website">
@@ -21,6 +21,7 @@
 <meta name="twitter:image" content="https://drqururi.github.io/tenmei/ogp.png">
 
 <style>
+
 :root{
   --bg1:#0d0b2e; --bg2:#1a0533; --bg3:#0d1b4b;
   --gold:#c9a84c; --gold-bright:#d4a800; --gold-light:#f5d78e;
@@ -87,152 +88,183 @@ select{
 .btn--text{background:transparent; border:none; color:var(--text-dim); text-decoration:underline; font-size:12px; letter-spacing:1px;}
 button.btn{width:100%; font-family:inherit;}
 
+
 #result{margin-top:8px;}
-.resultHead{text-align:center; margin-bottom:18px;}
-.resultHead__h{font-size:15px; color:var(--text-soft); letter-spacing:1px; margin-bottom:4px;}
-.resultHead__sub{font-size:10px; color:var(--text-dim); letter-spacing:1px;}
+.resultHead{text-align:center; margin-bottom:14px;}
+.resultHead__h{font-size:17px; color:var(--text-soft); letter-spacing:1px; margin-bottom:4px; font-weight:700; overflow-wrap:anywhere;}
+.resultHead__sub{font-size:11px; color:var(--text-dim); letter-spacing:1px;}
+.tag,.chip,.badge{overflow-wrap:anywhere;}
 
-.deck{display:flex; flex-direction:column; gap:16px; margin-bottom:20px;}
+/* ── 固定目次バー（2段：章→小見出し）。アプリの TocBar と同じ構成 ── */
+.tocbar{position:sticky; top:0; z-index:20; background:rgb(13,11,46); margin:0 -18px 16px; padding:8px 18px 8px; border-bottom:1px solid rgba(180,140,255,0.18);}
+.tocbar__t1{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px;}
+.tocbar__t2{display:flex; gap:6px; margin-top:6px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+.tocbar__t2::-webkit-scrollbar{display:none;}
+.chip{
+  display:inline-flex; align-items:center; justify-content:center; text-align:center; min-height:44px; padding:6px 12px;
+  border-radius:9999px; border:1px solid var(--card-border); background:var(--card-bg); color:var(--text-muted);
+  font-family:inherit; font-size:13px; line-height:1.3; cursor:pointer; flex-shrink:0;
+}
+.tocbar__t1 .chip{flex-shrink:1; min-width:0; padding:6px 6px; font-size:12.5px;}
+.tocbar__t2 .chip{font-size:12.5px; white-space:nowrap; min-height:40px;}
+.chip--on{background:var(--gold); border-color:var(--gold); color:#0d0b2e; font-weight:700;}
+.chip:focus-visible,.btn:focus-visible,.linkBtn:focus-visible,.moreBtn:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
 
-.tabsWrap__heading{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--gold-light); letter-spacing:1.5px; margin-bottom:12px;}
-.tabsWrap__tablist{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px;}
-@media (max-width:380px){
-  .tabsWrap__tablist{grid-template-columns:repeat(2,1fr);}
-}
-.tabBtn{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-  padding:10px 4px; border-radius:12px; border:1px solid rgba(180,140,255,0.25);
-  background:rgba(180,140,255,0.05); color:var(--text-muted); font-family:inherit; cursor:pointer;
-  text-align:center;
-}
-.tabBtn__icon{font-size:16px; line-height:1;}
-.tabBtn__name{font-size:11px; letter-spacing:0.5px; line-height:1.3;}
-.tabBtn--active{
-  background:linear-gradient(135deg, rgba(201,168,76,0.32), rgba(180,140,255,0.32));
-  border-color:rgba(201,168,76,0.6); color:var(--text-soft); font-weight:600;
-}
-.tabBtn:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px;}
+/* ── バッジ ── */
+.badge{display:inline-flex; align-items:center; gap:4px; border-radius:9999px; padding:2px 9px; font-size:11px; font-weight:700; letter-spacing:0.5px; border:1px solid transparent; white-space:nowrap; flex-shrink:0;}
+.badge--free{color:rgba(100,220,150,0.95); border-color:rgba(100,220,150,0.45); background:rgba(100,220,150,0.08);}
+.badge--paid{color:var(--gold-light); border-color:rgba(201,168,76,0.55); background:rgba(201,168,76,0.1);}
+.badge--part{color:var(--text-muted); border-color:rgba(180,140,255,0.4); background:rgba(180,140,255,0.08);}
+.badge--soon{color:#c9b6ff; border-color:rgba(180,140,255,0.55); background:rgba(180,140,255,0.12);}
+.paidRow--soon{border-color:rgba(180,140,255,0.4);}
+.lock{width:12px; height:12px; flex-shrink:0; color:var(--gold-light);}
 
-.card{
-  background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:18px;
-}
-.card__head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px;}
-.card__title{display:flex; align-items:center; gap:8px;}
-.card__dot{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;}
-.card__name{font-size:15px; letter-spacing:1px; font-weight:600; color:var(--text-soft);}
-.card__explainBtn{
-  border:1px solid rgba(180,140,255,0.4); border-radius:20px; padding:4px 10px;
-  background:transparent; color:var(--text-muted); font-size:10px; font-family:inherit; cursor:pointer;
-  white-space:nowrap;
-}
-.card__attr{margin-bottom:14px;}
-.card__attrLabel{font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:3px;}
-.card__attrValue{font-size:22px; letter-spacing:1px; font-weight:700; color:var(--text-soft);}
-.card__attrSub{font-size:12px; letter-spacing:1px; color:var(--text-muted); margin-top:2px;}
-.card__attrNote{font-size:10.5px; color:var(--text-dim); line-height:1.7; white-space:pre-line; margin:4px 0 0;}
+/* ── 天命まとめ・目次図 ── */
+.panel{background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:16px;}
+.panel__title{font-size:15px; font-weight:700; color:var(--gold-light); letter-spacing:1px; margin:0 0 4px;}
+.panel__lead{font-size:12px; color:var(--text-dim); margin:0 0 12px; line-height:1.7;}
+.sumGroup__h{font-size:12px; color:var(--gold); letter-spacing:1px; margin:12px 0 4px; font-weight:700;}
+.sumRow{display:block; width:100%; text-align:left; background:none; border:none; border-top:1px solid rgba(180,140,255,0.12); padding:10px 2px; font-family:inherit; color:inherit; cursor:pointer;}
+.sumRow__n{display:block; font-size:11px; color:var(--text-dim); margin-bottom:2px;}
+.sumRow__t{display:block; font-size:14px; color:#fff; font-weight:700; line-height:1.7;}
+details.diagram{margin-bottom:16px;}
+details.diagram>summary{list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:8px; min-height:44px;}
+details.diagram>summary::-webkit-details-marker{display:none;}
+.diagram__toggle{font-size:12px; color:var(--text-dim);}
+.legend{display:flex; flex-wrap:wrap; gap:10px; font-size:11px; color:var(--text-muted); margin:6px 0 10px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.dot{width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; background:rgba(100,220,150,0.95);}
+.dgCh{margin-top:14px;}
+.dgCh__h{font-size:14px; font-weight:700; color:var(--text-soft); margin:0;}
+.dgCh__d{font-size:11.5px; color:var(--text-dim); margin:2px 0 6px; line-height:1.6;}
+.dgSub{display:block; width:100%; text-align:left; background:rgba(255,255,255,0.02); border:1px solid rgba(180,140,255,0.15); border-radius:12px; padding:10px 12px; margin-bottom:6px; font-family:inherit; color:inherit; cursor:pointer;}
+.dgSub__top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.dgSub__label{font-size:13.5px; font-weight:700; color:var(--text-soft);}
+.dgSub__items{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:6px; font-size:11.5px; color:var(--text-muted);}
+.dgSub__items span{display:inline-flex; align-items:center; gap:4px;}
+.dgSub__note{font-size:11.5px; color:var(--text-muted); margin-top:4px;}
+.dgFoot--top{margin:0 0 4px;}
+.dgFoot__free{color:rgba(100,220,150,0.95); font-weight:700;}
+.dgFoot{margin-top:12px; font-size:12px; color:var(--text-muted); line-height:1.7;}
+.dgFoot b{color:var(--gold-light);}
 
-.card__sectionLabel{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--gold); letter-spacing:1.5px; margin:14px 0 8px;}
-.bar{width:3px; height:14px; background:var(--gold); border-radius:2px; display:inline-block;}
+/* ── 章 ── */
+.chapter{margin-bottom:26px;}
+.chapter__head{margin:0 0 12px; padding-top:6px;}
+.chapter__no{font-size:12px; color:var(--gold); letter-spacing:2px; font-weight:700;}
+.chapter__title{font-size:19px; font-weight:700; color:var(--text-soft); margin:2px 0 2px; letter-spacing:1px;}
+.chapter__desc{font-size:12px; color:var(--text-dim); margin:0;}
+.sub{margin-bottom:14px;}
+.sub__h{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; color:var(--gold-light); margin:0 0 8px; letter-spacing:0.5px;}
+.bar{width:3px; height:16px; background:rgba(201,168,76,0.9); border-radius:2px; display:inline-block; flex-shrink:0;}
 .bar--green{background:var(--green);}
 
+/* ── 鑑定カード ── */
+.card{background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; overflow:hidden; margin-bottom:10px;}
+.card__head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 16px; background:rgba(180,140,255,0.16);}
+.card__title{display:flex; align-items:center; gap:8px; min-width:0;}
+.card__dot{width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0;}
+.card__name{font-size:15px; letter-spacing:1px; font-weight:700; color:var(--text-soft); overflow-wrap:anywhere;}
+.card__inner{padding:14px 16px 12px;}
+.card__explainBtn{border:1px solid rgba(180,140,255,0.4); border-radius:9999px; padding:6px 12px; min-height:32px; background:transparent; color:var(--text-muted); font-size:11px; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0;}
+.card__attr{margin-bottom:12px;}
+.card__attrLabel{font-size:11px; letter-spacing:2px; color:var(--text-dim); margin-bottom:3px;}
+.card__attrValue{font-size:22px; letter-spacing:1px; font-weight:700; color:var(--text-soft); overflow-wrap:anywhere;}
+.card__attrSub{font-size:12.5px; letter-spacing:1px; color:var(--text-muted); margin-top:2px;}
+.card__attrNote{font-size:11px; color:var(--text-dim); line-height:1.7; white-space:pre-line; margin:4px 0 0;}
+.mini{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--gold); letter-spacing:1.5px; margin:14px 0 8px;}
 .tagrow{display:flex; flex-wrap:wrap; gap:5px;}
-.tag{border-radius:20px; padding:4px 10px; font-size:10px; border:1px solid transparent;}
+.tag{border-radius:9999px; padding:4px 10px; font-size:11px; border:1px solid transparent;}
 .tag--keyword{background:rgba(180,140,255,0.1); border-color:rgba(180,140,255,0.25); color:var(--purple-light);}
 .tag--good{background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.3); color:var(--gold-light);}
 .tag--challenge{background:rgba(180,140,255,0.05); border-color:rgba(180,140,255,0.18); color:var(--text-faint);}
-
 .compatRow{display:flex; align-items:flex-start; gap:7px; margin-bottom:6px;}
-.compatMark{border-radius:20px; padding:3px 7px; font-size:9px; flex-shrink:0;}
+.compatMark{border-radius:9999px; padding:3px 8px; font-size:10px; flex-shrink:0;}
 .compatMark--good{background:rgba(201,168,76,0.15); color:var(--gold);}
-.compatMark--challenge{background:rgba(180,140,255,0.1); color:rgba(200,180,255,0.6);}
-
+.compatMark--challenge{background:rgba(180,140,255,0.1); color:rgba(200,180,255,0.7);}
 .balance{display:flex; flex-direction:column; gap:5px;}
 .balance__row{display:flex; align-items:center; gap:8px;}
-.balance__el{width:16px; text-align:center; font-size:10px;}
+.balance__el{width:16px; text-align:center; font-size:11px;}
 .balance__track{flex:1; height:7px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;}
 .balance__fill{height:7px; border-radius:3px; opacity:0.75;}
-.balance__count{width:20px; text-align:right; font-size:9px; opacity:0.8;}
-
-.card__explain{margin-top:16px; padding-top:14px; border-top:1px solid rgba(180,140,255,0.1);}
-.explainSec{margin-bottom:14px;}
-.explainSec:last-child{margin-bottom:0;}
+.balance__count{width:20px; text-align:right; font-size:10px; opacity:0.8;}
+.card__explain{margin-top:12px; padding-top:12px; border-top:1px solid rgba(180,140,255,0.12);}
+.explainSec{margin-bottom:12px;}
 .explainSec__h{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--gold); letter-spacing:1.5px; margin-bottom:6px;}
-.explainSec__t{font-size:12.5px; color:var(--text-soft); line-height:1.8; margin:0;}
+.explainSec__t{font-size:13px; color:var(--text-soft); line-height:1.9; margin:0;}
 
-.card__reading{margin-top:16px;}
-.card__readingSec{margin-bottom:12px;}
-.card__readingSec--sep{border-top:1px solid rgba(180,140,255,0.1); padding-top:12px;}
-.card__readingText{font-size:12.5px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0;}
+/* ── 読みやすい本文（アプリの ReadableBlocks と同じ：結論=白の太字・「」=金・1文1段落） ── */
+.rb{margin-top:10px;}
+.rb__h{display:flex; align-items:center; gap:8px; margin:18px 0 8px; font-size:14px; font-weight:700; color:var(--gold-light); letter-spacing:0.5px;}
+.rb__h:first-child{margin-top:4px;}
+.rb__s{font-size:16px; line-height:29px; color:#efe4fa; margin:0 0 10px; overflow-wrap:anywhere;}
+.rb__s--lead{color:#fff; font-weight:700; margin-bottom:13px;}
+.rb__s em{font-style:normal; color:#c9a84c; font-weight:700;}
+.rb__gap{height:11px;}
+.moreBtn{display:flex; width:100%; min-height:44px; margin-top:6px; border-radius:22px; align-items:center; justify-content:center; border:1px solid rgba(201,168,76,0.55); background:transparent; color:var(--gold-light); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; padding:0 16px;}
+.rb__nav{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; column-gap:8px; margin-top:10px;}
+.linkBtn{background:none; border:none; font-family:inherit; font-size:14px; min-height:44px; padding:0 4px; cursor:pointer; color:var(--gold-light);}
+.linkBtn--dim{color:var(--text-dim);}
 
-.yearly{
-  background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.25);
-  border-radius:14px; padding:18px; margin-bottom:16px;
-}
-.yearly__label{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--gold-light); letter-spacing:1.5px; margin-bottom:10px;}
-.yearly__text{font-size:12.5px; color:var(--text-soft); line-height:1.9; margin:0 0 14px; white-space:pre-line;}
-.yearly__grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-.yearly__item{
-  background:rgba(255,255,255,0.03); border:1px solid rgba(201,168,76,0.15);
-  border-radius:10px; padding:10px 12px;
-}
-.yearly__itemLabel{font-size:10px; letter-spacing:1.5px; color:var(--gold); margin-bottom:4px;}
-.yearly__itemText{font-size:11.5px; color:var(--text-muted); line-height:1.6;}
+/* ── 今後の運勢 ── */
+.monthMark{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+.monthMark__m{font-size:30px; font-weight:700; color:var(--gold-light); line-height:1;}
+.monthMark__t{font-size:15px; font-weight:700; color:var(--text-soft);}
+.foot{font-size:11.5px; color:var(--text-dim); line-height:1.7; margin:8px 0 0;}
+.nextLine{font-size:12.5px; color:var(--text-muted); margin:10px 0 0; line-height:1.7;}
+.picker{display:flex; gap:8px; margin:6px 0 8px;}
+.picker .chip{flex:1;}
+.decadeTitle{font-size:15px; font-weight:700; color:var(--gold-light); line-height:1.6; margin:4px 0 6px;}
+.beastName{font-size:26px; font-weight:700; color:var(--text-soft); letter-spacing:2px;}
+.beastRead{font-size:12px; color:var(--text-dim); margin-left:6px;}
+.cycleBar{display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:3px; margin:10px 0 4px;}
+.cycleBar i{display:block; height:12px; border-radius:3px; opacity:0.6;}
+.cycleBar i.on{opacity:1; outline:2px solid #fff; outline-offset:1px;}
+.cycleLabels{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); font-size:11px; color:var(--text-dim); text-align:center;}
+.seasonBadge{display:inline-flex; align-items:center; border-radius:9999px; padding:3px 11px; font-size:12px; font-weight:700; color:#0d0b2e; margin:4px 0 6px;}
 
-.direction{
-  background:rgba(46,180,120,0.05); border:1px solid rgba(100,220,150,0.2);
-  border-radius:14px; padding:18px; margin-bottom:20px; text-align:center;
-}
-.direction__label{display:flex; align-items:center; justify-content:center; gap:7px; font-size:13px; color:var(--green); letter-spacing:1.5px; margin-bottom:8px;}
-.direction__note{font-size:10.5px; color:var(--text-dim); margin:0 0 14px; line-height:1.7;}
-.direction__compass{display:flex; justify-content:center; margin-bottom:14px;}
-.direction__rowLabel{font-size:11px; letter-spacing:2px; margin:10px 0 6px;}
+/* ── 有料（名前だけ）行 ── */
+.paidList{margin-top:8px;}
+.paidList__h{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); margin:12px 0 6px;}
+.paidList__h::before,.paidList__h::after{content:""; flex:1; border-top:1px dashed rgba(201,168,76,0.4);}
+.paidRow{border:1px dashed rgba(201,168,76,0.35); border-radius:12px; padding:10px 12px; margin-bottom:6px; background:rgba(255,255,255,0.015);}
+.paidRow__top{display:flex; align-items:center; gap:8px; justify-content:space-between;}
+.paidRow__name{display:flex; align-items:center; gap:7px; font-size:14px; font-weight:700; color:var(--text-soft); min-width:0; overflow-wrap:anywhere;}
+.paidRow__hint{font-size:12px; color:var(--text-muted); line-height:1.7; margin:4px 0 0 19px;}
+
+/* ── 総合占い（カテゴリ） ── */
+.cat{margin-bottom:18px;}
+.cat__count{font-size:11px; color:var(--text-dim); font-weight:400; margin-left:auto;}
+.compCard{border-radius:16px; overflow:hidden; margin-bottom:10px; border:1px solid;}
+.compCard__head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px;}
+.compCard__inner{padding:14px 16px 12px;}
+.compCard__quote{font-size:18px; line-height:1.7; text-align:center; font-weight:700; margin:2px 0 12px; overflow-wrap:anywhere;}
+
+/* ── 続きはアプリで ── */
+.cta{margin:14px 0 0; text-align:center; border:1px solid rgba(201,168,76,0.4); border-radius:16px; padding:16px 14px; background:linear-gradient(160deg, rgba(201,168,76,0.1), rgba(180,140,255,0.06));}
+.cta__lead{font-size:13px; color:var(--text-soft); line-height:1.8; margin:0 0 12px;}
+.cta .btn{width:100%; min-height:48px;}
+.cta--end{margin:28px 0 16px; padding:20px 16px;}
+.cta--end .cta__title{font-size:16px; font-weight:700; color:var(--gold-light); margin:0 0 6px; letter-spacing:1px;}
+
+/* ── おまけ（Webだけの内容） ── */
+.extra{margin-bottom:22px;}
+.extra__tag{display:inline-block; font-size:11px; color:var(--text-dim); border:1px solid rgba(180,140,255,0.3); border-radius:9999px; padding:1px 10px; margin-bottom:6px;}
+.direction{background:rgba(46,180,120,0.05); border:1px solid rgba(100,220,150,0.2); border-radius:16px; padding:16px; margin-bottom:12px; text-align:center;}
+.direction__label{display:flex; align-items:center; justify-content:center; gap:7px; font-size:14px; font-weight:700; color:var(--green); letter-spacing:1px; margin-bottom:8px;}
+.direction__note{font-size:11.5px; color:var(--text-dim); margin:0 0 12px; line-height:1.7;}
+.direction__compass{display:flex; justify-content:center; margin-bottom:12px;}
+.direction__compass svg{max-width:100%; height:auto;}
+.direction__rowLabel{font-size:12px; letter-spacing:2px; margin:10px 0 6px;}
 .direction__rowLabel--good{color:var(--green);}
 .direction__rowLabel--bad{color:#e87c60;}
 .direction .tagrow{justify-content:center;}
 .direction__empty{font-size:12px; color:var(--text-dim);}
-.direction__appHint{font-size:11px; color:var(--text-dim); margin:16px 0 10px;}
-
-.composite{margin-bottom:22px;}
-.composite__body{
-  background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.2);
-  border-radius:14px; padding:18px;
-}
-.composite__lockTitle{font-size:15px; color:var(--gold-light); letter-spacing:1px; text-align:center; margin-bottom:8px; font-weight:600;}
-.composite__lockDesc{font-size:11px; color:var(--text-dim); text-align:center; margin-bottom:14px; line-height:1.7;}
-.composite__list{display:flex; flex-direction:column; gap:7px; margin-bottom:16px;}
-.composite__item{display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-muted);}
-.composite__dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block;flex-shrink:0;}
-
-/* 統合鑑定の有料アップセル（残り16項目）のratioバッジ。2026-10-16: 無料プレビュー4項目は
-   統合区画と内容が重なるため画面から外した（composite-free.mjsファイル自体は温存） */
-.ratioRow{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
-.ratioBadge{padding:5px 10px; border-radius:14px; font-size:9px;}
-.ratioBadge--paid{background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); color:var(--gold-light);}
-
-/* 区画1: 占術ごとの単独結果（区画2と見た目で明確に区別＝控えめな紫系の枠） */
-.soloSection{
-  background:rgba(255,255,255,0.02); border:1px solid rgba(180,140,255,0.18);
-  border-radius:16px; padding:18px; margin-bottom:22px;
-}
-.soloSection__head{margin-bottom:14px;}
-.soloSection__title{font-size:14px; letter-spacing:1.5px; color:var(--purple-light); margin:0 0 6px; font-weight:700;}
-.soloSection__lead{font-size:11.5px; color:var(--text-dim); margin:0 0 6px;}
-.soloSection__note{font-size:10.5px; color:var(--text-faint); margin:0;}
-
-/* 区画2: 4つを統合した鑑定（区画1とは逆に金×紫のグラデーションで「特別感」を出す） */
-.integratedSection{
-  background:linear-gradient(160deg, rgba(201,168,76,0.1), rgba(180,140,255,0.08));
-  border:1px solid rgba(201,168,76,0.4); border-radius:18px; padding:20px; margin-bottom:22px;
-}
-.integratedSection__head{text-align:center; margin-bottom:16px;}
-.integratedSection__title{font-size:17px; letter-spacing:1.5px; color:var(--gold-light); margin:0 0 6px; font-weight:700;}
-.integratedSection__lead{font-size:11.5px; color:var(--text-soft); margin:0; line-height:1.8;}
-
-.integrated__blocks{display:flex; flex-direction:column; gap:14px; margin-bottom:18px;}
-.integratedBlock{background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.25); border-radius:14px; padding:16px;}
-.integratedBlock__title{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--gold); letter-spacing:1.5px; margin-bottom:6px;}
-.integratedBlock__pair{font-size:10.5px; color:var(--text-dim); letter-spacing:0.5px; margin-bottom:8px;}
-.integratedBlock__text{font-size:12.5px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0;}
+.direction .paidList{text-align:left;}
+.integratedBlock{background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.25); border-radius:16px; padding:16px; margin-bottom:10px;}
+.integratedBlock__title{display:flex; align-items:center; gap:7px; font-size:14px; font-weight:700; color:var(--gold-light); margin-bottom:6px;}
+.integratedBlock__pair{font-size:11px; color:var(--text-dim); margin-bottom:8px;}
+.integratedBlock__text{font-size:13px; color:var(--text-soft); line-height:1.9; white-space:pre-line; margin:0; overflow-wrap:anywhere;}
 
 /* ローディング演出（診断ボタン押下から結果表示まで約5秒） */
 /* 注意: .loadingはdisplay:flexを持つため、hidden属性（UAデフォルトのdisplay:none）より
@@ -256,9 +288,6 @@ button.btn{width:100%; font-family:inherit;}
 .loading__stage--active .loading__stageMark{border-color:var(--gold-light); box-shadow:0 0 0 3px rgba(201,168,76,0.18);}
 .loading__stage--done{color:var(--text-dim);}
 .loading__stage--done .loading__stageMark{background:var(--gold); border-color:var(--gold); color:var(--bg1);}
-
-.appLink{text-align:center; margin:26px 0;}
-.appLink__lead{font-size:11px; color:var(--text-dim); margin-bottom:10px;}
 
 .shareBox{text-align:center; margin:22px 0;}
 .shareBox__lead{font-size:11px; color:var(--text-dim); margin-bottom:10px;}
@@ -285,7 +314,7 @@ footer a{color:var(--text-dim);}
   <p class="lead">4つの占術でわかるあなたの本質</p>
 
   <section id="intro">
-    <p class="lead" style="margin-bottom:16px;">九星気学・数秘術・西洋占星術・四柱推命。生まれ持った4つの占術を統合して、あなたの本質を読み解きます。生年月日を入れるだけ、30秒でわかります。</p>
+    <p class="lead" style="margin-bottom:16px;">九星気学・数秘術・西洋占星術・四柱推命の4つの占術と、今月・今の10年・今年の神獣の流れ、総合占いの一部まで、生年月日を入れるだけで無料で読めます。続きの詳しい鑑定はアプリで。</p>
 
     <div class="privacy">
       <strong>生年月日はこの端末の中だけで計算します。</strong><br>
@@ -318,16 +347,16 @@ footer a{color:var(--text-dim);}
         <div class="resultHead__sub" id="resultBirth"></div>
       </div>
 
-      <div id="soloHost"></div>
+      <nav class="tocbar" id="tocBar" aria-label="天命の目次">
+        <div class="tocbar__t1" id="tocT1"></div>
+        <div class="tocbar__t2" id="tocT2"></div>
+      </nav>
 
-      <div id="integratedHost"></div>
-
-      <div id="directionHost"></div>
-
-      <div class="appLink">
-        <p class="appLink__lead">今月・今日の吉方位、人生の転機や結婚の時期、要注意の時期など、4つの命術を同時に読み解いた20項目の詳しい鑑定はアプリで</p>
-        <a class="btn btn--gold" href="https://apps.apple.com/jp/app/id6791989590" target="_blank" rel="noopener">パワースポットマップを見る</a>
-      </div>
+      <div id="summaryHost"></div>
+      <div id="diagramHost"></div>
+      <div id="chaptersHost"></div>
+      <div id="extraHost"></div>
+      <div id="endCtaHost"></div>
 
       <div class="shareBox">
         <p class="shareBox__lead">結果をシェアする</p>

@@ -1,19 +1,40 @@
 // 天命診断サイト — 画面制御（生年月日はこの端末内だけで扱い、どこにも送信しない）
+// 構成はアプリ「パワースポットマップ」1.3.6 の天命タブと同じ3章：
+//   ① 4つの運勢 ／ ② 今後の運勢（月・10年・神獣） ／ ③ 総合占い（4カテゴリ）
+// 無料／有料の線引きは structure.mjs（アプリ lib/tenmei/structure.ts の移植）に従う。
 import { buildFortuneProfile, buildFortuneExtras, calcYearDirections, DIR_ORDER, DIR_META } from './fortune-core.mjs';
 import { getNineStarReading } from './readings/nine-star.mjs';
 import { getNineStarExtra, TSUKI_STAR_NOTE, HONMEI_STAR_NOTE } from './readings/nine-star-extra.mjs';
 import { getNumerologyReading } from './readings/numerology.mjs';
 import { getAstrologyReading } from './readings/astrology.mjs';
 import { getFourPillarsReading } from './readings/four-pillars.mjs';
-import { getYearlyReading } from './readings/yearly-2026.mjs';
+import { getCompositeFreeReading } from './readings/composite-free.mjs';
 import { getStarSignOverlap, getNumStemOverlap, getSignStemOverlap } from './readings/composite-pairs.mjs';
+import {
+  TENMEI_CHAPTERS, COMPOSITE_CATEGORIES, JUSHIN_PAID_ITEMS, PAID_ITEM_HINTS, FUTURE_PAID_NOTES, FREE_ITEM_META,
+  FREE_COMPOSITE_ITEM_COUNT, PAID_COMPOSITE_ITEM_COUNT,
+  buildDiagram, subStatus, subStatusLabel, paidItemCount, buildFreeRangeSummary, buildPaidLine, pickActiveIndex,
+} from './structure.mjs';
+import {
+  toSentences, parseBlocks, baseBlocks, splitEmphasis, collapseView, moreLabel, nextStop, nextLabel,
+  TOC_BACK_LABEL, buildSummary, summaryTitle, buildFreeSecs,
+} from './readable.mjs';
+import {
+  buildMonthlyFortuneCalc, calcMonthlyNineStarPalace, buildFreeMonthlyReading, buildFreeMonthlyFootnote, STRENGTH_LABEL,
+  buildFreeDaiunReading, calcDaiun, calcJushin, cyclePositionAt, SEASONS, SEASON_THEME, SEASON_GIST, SEASON_COLOR,
+  BEAST_ONE_LINER, buildCycleMention,
+} from './future-core.mjs';
+
+const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6791989590';
+const SITE_URL = 'https://drqururi.github.io/tenmei/';
+// Webだけにある「4つを重ねて読む」3ブロック（九星×星座など）。アプリには無く、本文に「絶対」「確実」など断定の語が13か所あるため既定は非表示。
+const SHOW_PAIR_BLOCKS = false;
 
 // 占術ID → その占術の鑑定データを引くための関数（profile全体を受け取る）
 const READING_LOOKUP = {
   nine_star:    (profile) => {
     const base = getNineStarReading(profile.nineStar.honmeiStarName);
     if (!base) return null;
-    // 象意の広がり／日常のヒント／本命星の調べ方の注記（無料で見せる範囲のみ）
     const extra = getNineStarExtra(profile.nineStar.honmeiStarName);
     return { ...base, ...(extra ?? {}), note: HONMEI_STAR_NOTE };
   },
@@ -22,77 +43,30 @@ const READING_LOOKUP = {
   four_pillars: (profile) => getFourPillarsReading(profile.fourPillars.day.stem),
 };
 
-const APP_STORE_URL = 'https://apps.apple.com/jp/app/id6791989590';
-const SITE_URL = 'https://drqururi.github.io/tenmei/';
-
 const FORTUNE_DATA = [
-  {
-    id: 'nine_star',
-    icon: '☯',
-    name: '九星気学',
-    sub: '東洋占術 ／ 命占 ／ 9つの星に分類',
-    attrLabel: '本命星',
+  { id: 'nine_star', name: '九星気学', attrLabel: '本命星',
     explain: [
       { h: 'どんな占術？', t: '古代中国から伝わる東洋の命占術です。天地のエネルギーを9つの星に分類し、生まれた年・月・日の星の配置からその人の本質・才能・運命を読み解きます。' },
       { h: '日常でどう取り入れる？', t: '最も実践的なのは「方位」の活用です。吉方位に向かって外出したり、引越しや旅行の方向を吉方位に合わせると運のエネルギーが高まるといわれています。' },
-    ],
-  },
-  {
-    id: 'numerology',
-    icon: '∞',
-    name: '数秘術',
-    sub: '西洋占術 ／ 命占 ／ 1〜9・11・22・33の12分類',
-    attrLabel: '数秘術の数',
+    ] },
+  { id: 'numerology', name: '数秘術', attrLabel: '数秘術の数',
     explain: [
       { h: 'どんな占術？', t: '古代ギリシャのピタゴラスが体系化したとされる西洋の占術です。生年月日の数字を一桁になるまで足し合わせて、その人の核となる数を導き出します。' },
       { h: '日常でどう取り入れる？', t: 'パーソナルイヤーナンバーを計算することで今年のテーマがわかります。今が何の年かを把握して、行動の指針にしてみてください。' },
-    ],
-  },
-  {
-    id: 'astrology',
-    icon: '★',
-    name: '西洋占星術',
-    sub: '西洋占術 ／ 命占 ／ 12星座×10天体×12ハウス',
-    attrLabel: '太陽星座',
+    ] },
+  { id: 'astrology', name: '西洋占星術', attrLabel: '太陽星座',
     explain: [
       { h: 'どんな占術？', t: '約2000年以上の歴史を持つ西洋の命占術です。生まれた瞬間の天体の配置をホロスコープに記録し、その配置パターンから性格・才能・人生の流れを読み解きます。' },
       { h: '日常でどう取り入れる？', t: '「月のサイクル」の活用が最もすぐに使えます。新月は始める日、満月は手放す日として意識すると、日常のリズムが整いやすくなります。' },
-    ],
-  },
-  {
-    id: 'four_pillars',
-    icon: '龍',
-    name: '四柱推命',
-    sub: '東洋占術 ／ 命占 ／ 干支×五行×大運',
-    attrLabel: '命式（日柱）',
+    ] },
+  { id: 'four_pillars', name: '四柱推命', attrLabel: '命式（日柱）',
     explain: [
       { h: 'どんな占術？', t: '中国4000年の歴史を持つ東洋最高峰の命占術です。生まれた年・月・日・時の柱から命式という運命の地図を作ります。' },
       { h: '日常でどう取り入れる？', t: '「命式はそのままの自分を示している」ということを大切にしてください。良い・悪い命式は存在せず、すべての命式に固有の強みがあります。' },
-    ],
-  },
+    ] },
 ];
-
-// 2026-10-16: アプリの購入モーダルと同一の文言に更新。総合性格・天職・人生の転機・
-// 恋愛の癖と傾向は無料公開になったため外し、新規追加した有料項目を含めた16項目から抜粋。
-const COMPOSITE_ITEMS = [
-  '生まれてから死ぬまでの運気の流れ',
-  '結婚運・結婚の時期',
-  '要注意の時期・転機',
-  '運命の人と出会う場所',
-  '家族運・人間関係のアドバイス',
-  '隠れた才能・前世・魂のルーツ',
-  '開運アクション（ラッキーカラー・数字・方位）',
-];
-
-// 2026-10-16: 無料プレビュー4項目（総合性格・天職・人生の転機・恋愛の癖と傾向）は、
-// 統合鑑定区画（九星×星座／数秘×日干／星座×日干）と内容が重なるため画面表示から外した
-// （composite-free.mjs とそのデータは温存。将来また使う可能性があるため削除しない）。
-
-// 「約6割有料」の文言（アプリ側 lib/claude.ts の宣言済み目標文字数と揃える。実測値ではないため「約」を付ける）
-const PAID_RATIO_TEXT = '有料の鑑定：約6割（約4,560字・16項目）';
 
 const $ = (sel, root = document) => root.querySelector(sel);
-const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
@@ -115,90 +89,162 @@ function tagRow(items, variant) {
   return wrap;
 }
 
-function buildReadingSection(reading) {
-  if (!reading) return null;
-  const wrap = el('div', { class: 'card__reading' });
-  const items = [
-    { label: '本質・性格', text: reading.essence },
-    { label: '相性のいいタイプ', text: reading.compatibility },
-    { label: '人生の運気の流れ', text: reading.life_flow },
-    // 九星気学のみ：象意の広がり／日常で意識しやすいヒント／本命星の調べ方（他の占術では未定義＝出さない）
-    reading.symbols ? { label: '象意の広がり', text: reading.symbols } : null,
-    reading.luckyHint ? { label: '日常で意識しやすいヒント', text: reading.luckyHint } : null,
-    reading.note ? { label: '本命星の調べ方', text: reading.note } : null,
-  ].filter(Boolean);
-  items.forEach((item, i) => {
-    const sec = el('div', { class: i === 0 ? 'card__readingSec' : 'card__readingSec card__readingSec--sep' });
-    sec.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), item.label]));
-    sec.appendChild(el('p', { class: 'card__readingText', text: item.text }));
-    wrap.appendChild(sec);
-  });
-  return wrap;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs = {}) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  return node;
+}
+function lockIcon() {
+  const svg = svgEl('svg', { class: 'lock', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' });
+  svg.appendChild(svgEl('rect', { x: 5, y: 11, width: 14, height: 9, rx: 2 }));
+  svg.appendChild(svgEl('path', { d: 'M8 11V8a4 4 0 0 1 8 0v3' }));
+  return svg;
+}
+const badge = (kind, text) => el('span', { class: `badge badge--${kind}` }, [kind === 'paid' ? lockIcon() : null, text]);
+
+// ─── 画面の共有状態（結果を作るたびに作り直す） ──────────────────
+let ctx = null;
+const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function barHeight() { const b = $('#tocBar'); return b ? b.offsetHeight : 0; }
+function scrollToEl(node, extra = 4) {
+  const y = node.getBoundingClientRect().top + window.scrollY - barHeight() - extra;
+  window.scrollTo({ top: Math.max(0, y), behavior: reduceMotion() ? 'auto' : 'smooth' });
+}
+// 区画へ飛ぶ。カードなら自動で開く（アプリ：目次・固定バーから来たら開く）
+function jumpKey(key) {
+  const t = ctx.targets[key];
+  if (!t) return;
+  if (t.open) t.open();
+  requestAnimationFrame(() => scrollToEl(t.el));
+}
+const backToToc = () => { const n = $('#diagramHost'); if (n) scrollToEl(n, 8); };
+
+// ─── 読みやすい本文（アプリ ReadableBlocks の移植） ────────────────
+function sentenceNode(text, lead) {
+  const p = el('p', { class: lead ? 'rb__s rb__s--lead' : 'rb__s' });
+  for (const seg of splitEmphasis(text)) {
+    p.appendChild(seg.gold ? el('em', { text: seg.text }) : document.createTextNode(seg.text));
+  }
+  return p;
+}
+// 「次は 〜 →」と「↑ 目次に戻る」
+function navRow(navKey) {
+  const nx = nextStop(navKey);
+  const nav = el('div', { class: 'rb__nav' });
+  nav.appendChild(nx
+    ? el('button', { type: 'button', class: 'linkBtn', text: nextLabel(nx), onclick: () => jumpKey(nx.key) })
+    : el('span'));
+  nav.appendChild(el('button', { type: 'button', class: 'linkBtn linkBtn--dim', text: TOC_BACK_LABEL, onclick: backToToc }));
+  return nav;
+}
+// navKey を渡すと末尾に「次は 〜 →」「↑ 目次に戻る」を付ける。戻り値 { node, open() }
+function readableBox(blocks, navKey, headEl, deferNav = false) {
+  const root = el('div', { class: 'rb' });
+  let isOpen = false;
+  function render() {
+    root.innerHTML = '';
+    const view = collapseView(blocks, isOpen);
+    view.blocks.forEach((b) => {
+      let leadDone = false;
+      if (b.heading !== undefined) root.appendChild(el('div', { class: 'rb__h', role: 'heading', 'aria-level': '4' }, [el('span', { class: 'bar' }), b.heading]));
+      for (const s of b.items) {
+        if (s === '') { root.appendChild(el('div', { class: 'rb__gap' })); continue; }
+        root.appendChild(sentenceNode(s, !leadDone));
+        leadDone = true;
+      }
+    });
+    if (view.needsCollapse) {
+      root.appendChild(el('button', {
+        type: 'button', class: 'moreBtn', 'aria-expanded': isOpen ? 'true' : 'false',
+        text: moreLabel(isOpen, view.hiddenApprox),
+        onclick: () => { isOpen = !isOpen; render(); if (!isOpen && headEl) scrollToEl(headEl, 8); },
+      }));
+    }
+    if (navKey && !deferNav) root.appendChild(navRow(navKey));
+  }
+  render();
+  return { node: root, open() { if (!isOpen) { isOpen = true; render(); } } };
 }
 
-function buildCard(fortune, userAttr, extras, reading) {
-  const card = el('div', { class: 'card' });
+// ─── 有料項目（名前＋有料バッジ＋「この項目でわかること」）／章末の「続きはアプリで」 ──
+function paidRow(name, hint) {
+  const row = el('div', { class: 'paidRow' });
+  row.appendChild(el('div', { class: 'paidRow__top' }, [
+    el('span', { class: 'paidRow__name' }, [lockIcon(), name]),
+    badge('paid', '有料'),
+  ]));
+  if (hint) row.appendChild(el('p', { class: 'paidRow__hint', text: hint }));
+  return row;
+}
+function paidList(rows, headText = 'ここまで無料 ／ ここから有料') {
+  const wrap = el('div', { class: 'paidList' });
+  if (headText) wrap.appendChild(el('div', { class: 'paidList__h', text: headText }));
+  for (const [n, h] of rows) wrap.appendChild(paidRow(n, h));
+  return wrap;
+}
+function appButton(label = '続きはアプリで') {
+  return el('a', { class: 'btn btn--gold', href: APP_STORE_URL, target: '_blank', rel: 'noopener', text: label });
+}
+function ctaBox(lead, extraClass = '') {
+  return el('div', { class: `cta ${extraClass}`.trim() }, [el('p', { class: 'cta__lead', text: lead }), appButton()]);
+}
 
+// ─── ① 4つの運勢 ────────────────────────────────────────────
+function buildCard(fortune, userAttr, extras, reading, navKey) {
+  const card = el('div', { class: 'card' });
   const head = el('div', { class: 'card__head' }, [
-    el('div', { class: 'card__title' }, [
-      el('span', { class: 'card__dot' }),
-      el('span', { class: 'card__name', text: fortune.name }),
-    ]),
+    el('div', { class: 'card__title' }, [el('span', { class: 'card__dot' }), el('span', { class: 'card__name', text: fortune.name })]),
     el('button', { class: 'card__explainBtn', type: 'button', text: `${fortune.name}とは？` }),
   ]);
+  card.appendChild(head);
+  const inner = el('div', { class: 'card__inner' });
+  card.appendChild(inner);
 
-  const attrBox = el('div', { class: 'card__attr' }, [
+  inner.appendChild(el('div', { class: 'card__attr' }, [
     el('div', { class: 'card__attrLabel', text: userAttr.label }),
     el('div', { class: 'card__attrValue', text: userAttr.value }),
     userAttr.sub ? el('div', { class: 'card__attrSub', text: userAttr.sub }) : null,
     userAttr.subNote ? el('p', { class: 'card__attrNote', text: userAttr.subNote }) : null,
-  ]);
-  card.appendChild(head);
-  card.appendChild(attrBox);
+  ]));
 
   if (extras.keywords.length > 0) {
-    card.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), 'あなたの強み']));
-    card.appendChild(tagRow(extras.keywords, 'keyword'));
+    inner.appendChild(el('div', { class: 'mini' }, [el('span', { class: 'bar' }), 'あなたの強み']));
+    inner.appendChild(tagRow(extras.keywords, 'keyword'));
   }
-
   if (extras.compat.good.length > 0) {
-    card.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), extras.compat.label]));
-    const goodRow = el('div', { class: 'compatRow' }, [
-      el('span', { class: 'compatMark compatMark--good', text: '◎' }),
-      tagRow(extras.compat.good, 'good'),
-    ]);
-    card.appendChild(goodRow);
+    inner.appendChild(el('div', { class: 'mini' }, [el('span', { class: 'bar' }), extras.compat.label]));
+    inner.appendChild(el('div', { class: 'compatRow' }, [el('span', { class: 'compatMark compatMark--good', text: '◎' }), tagRow(extras.compat.good, 'good')]));
     if (extras.compat.challenge && extras.compat.challenge.length > 0) {
-      const chRow = el('div', { class: 'compatRow' }, [
-        el('span', { class: 'compatMark compatMark--challenge', text: '△' }),
-        tagRow(extras.compat.challenge, 'challenge'),
-      ]);
-      card.appendChild(chRow);
+      inner.appendChild(el('div', { class: 'compatRow' }, [el('span', { class: 'compatMark compatMark--challenge', text: '△' }), tagRow(extras.compat.challenge, 'challenge')]));
     }
   }
-
   if (extras.elementBalance && extras.elementBalance.length > 0) {
-    card.appendChild(el('div', { class: 'card__sectionLabel' }, [el('span', { class: 'bar' }), '命式の五行バランス']));
+    inner.appendChild(el('div', { class: 'mini' }, [el('span', { class: 'bar' }), '命式の五行バランス']));
     const maxC = Math.max(...extras.elementBalance.map((e) => e.count), 1);
     const balanceBox = el('div', { class: 'balance' });
     for (const { element, color, count } of extras.elementBalance) {
       const pct = Math.round((count / maxC) * 100);
       balanceBox.appendChild(el('div', { class: 'balance__row' }, [
         el('span', { class: 'balance__el', style: `color:${color}`, text: element }),
-        el('div', { class: 'balance__track' }, [
-          el('div', { class: 'balance__fill', style: `width:${pct}%;background:${color}` }),
-        ]),
+        el('div', { class: 'balance__track' }, [el('div', { class: 'balance__fill', style: `width:${pct}%;background:${color}` })]),
         el('span', { class: 'balance__count', text: count > 0 ? String(count) : '—' }),
       ]));
     }
-    card.appendChild(balanceBox);
+    inner.appendChild(balanceBox);
   }
 
-  // 本質・性格 / 相性のいいタイプ / 人生の運気の流れ（アプリの基本鑑定カードと同じ見出し・並び）
-  const readingBox = buildReadingSection(reading);
-  if (readingBox) card.appendChild(readingBox);
+  // 性格の本質／相性のいいタイプ／運気の流れ（アプリと同じ見出し・並び）。九星気学だけ Web 独自の補足を末尾に足す
+  const extraBlocks = [];
+  if (reading) {
+    if (reading.symbols) extraBlocks.push({ heading: '象意の広がり', text: reading.symbols });
+    if (reading.luckyHint) extraBlocks.push({ heading: '日常で意識しやすいヒント', text: reading.luckyHint });
+    if (reading.note) extraBlocks.push({ heading: '本命星の調べ方', text: reading.note });
+  }
+  const rb = readableBox(baseBlocks(reading, extraBlocks), navKey, card);
+  inner.appendChild(rb.node);
 
-  // 占術の解説（アプリの「〇〇とは？」モーダルと同じ静的テキスト）
   const explainBox = el('div', { class: 'card__explain', hidden: '' });
   for (const sec of fortune.explain) {
     explainBox.appendChild(el('div', { class: 'explainSec' }, [
@@ -206,168 +252,155 @@ function buildCard(fortune, userAttr, extras, reading) {
       el('p', { class: 'explainSec__t', text: sec.t }),
     ]));
   }
-  card.appendChild(explainBox);
-  head.querySelector('.card__explainBtn').addEventListener('click', () => {
-    explainBox.hidden = !explainBox.hidden;
-  });
-
-  return card;
+  inner.appendChild(explainBox);
+  head.querySelector('.card__explainBtn').addEventListener('click', () => { explainBox.hidden = !explainBox.hidden; });
+  return { el: card, open: rb.open };
 }
 
-// ─── 区画1: 4つの占術 それぞれの単独結果（タブ切り替え） ─────────────
-// 博士指示（2026-10-16）：ここは「占術ごとの単独の結果」であり統合結果ではないことを
-// 一目でわかるようにする。見出し・背景・枠を区画2（統合鑑定）と明確に区別する（CSS側で対応）。
-function buildSoloSection(cardsById) {
-  const section = el('section', { class: 'soloSection' });
-  section.appendChild(el('div', { class: 'soloSection__head' }, [
-    el('h2', { class: 'soloSection__title', text: '4つの占術 それぞれの結果' }),
-    el('p', { class: 'soloSection__lead', text: 'まずは占術ごとに、単独で読み解いた結果です' }),
-    el('p', { class: 'soloSection__note', text: '※ まだ4つを重ね合わせていません。統合した結果は下にあります。' }),
+// ─── ② 今後の運勢 ────────────────────────────────────────────
+function futureCard(title, free = true) {
+  const card = el('div', { class: 'card' });
+  card.appendChild(el('div', { class: 'card__head' }, [
+    el('div', { class: 'card__title' }, [el('span', { class: 'card__dot' }), el('span', { class: 'card__name', text: title })]),
+    badge(free ? 'free' : 'paid', free ? '無料' : '有料'),
   ]));
-  section.appendChild(buildFortuneTabs(cardsById));
-  return section;
+  const inner = el('div', { class: 'card__inner' });
+  card.appendChild(inner);
+  return { card, inner };
 }
 
-// タブ本体（タイトル＋ボタンで切り替え。縦列挙はしない） ─────────────
-// role="tab"/"tabpanel" + 矢印キー/Home/Endでのキーボード操作に対応（WAI-ARIA tabsパターン）。
-function buildFortuneTabs(cardsById) {
-  const wrap = el('div', { class: 'tabsWrap' });
-  wrap.appendChild(el('div', { class: 'tabsWrap__heading' }, [el('span', { class: 'bar' }), '4つの占術']));
+function buildMonthly(profile, birthDate, now) {
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const honmei = profile.nineStar.honmeiStar;
+  const calc = buildMonthlyFortuneCalc(birthDate, honmei, year)[month - 1];
+  const { card, inner } = futureCard('今月の運勢');
+  inner.appendChild(el('div', { class: 'monthMark' }, [
+    el('span', { class: 'monthMark__m', text: calc.strengthMark }),
+    el('span', { class: 'monthMark__t', text: `${month}月の運勢（今月・無料）　${STRENGTH_LABEL[calc.strength]}` }),
+  ]));
+  const rb = readableBox([{ items: toSentences(buildFreeMonthlyReading(calc)) }], 'sub:monthly', card, true);
+  inner.appendChild(rb.node);
+  inner.appendChild(el('p', { class: 'foot', text: buildFreeMonthlyFootnote(calc) }));
+  const pos = cyclePositionAt(calcJushin(birthDate).beast, now);
+  inner.appendChild(el('p', { class: 'foot', text: buildCycleMention(pos) }));
+  const ny = month === 12 ? year + 1 : year;
+  const nm = month === 12 ? 1 : month + 1;
+  const next = calcMonthlyNineStarPalace(honmei, ny, nm);
+  inner.appendChild(el('p', { class: 'nextLine', text: `来月（${nm}月）は${next.palaceName}宮の月です（無料）` }));
+  inner.appendChild(navRow('sub:monthly'));
+  inner.appendChild(paidList([['ほかの月の運勢（12か月分）', FUTURE_PAID_NOTES.monthly]], '詳しい続きは有料'));
+  return { el: card, open: rb.open };
+}
 
-  const tablist = el('div', { class: 'tabsWrap__tablist', role: 'tablist', 'aria-label': '占術を選択' });
-  const panelHost = el('div', { class: 'tabsWrap__panel' });
-  const buttons = [];
-
-  function selectTab(idx, moveFocus) {
-    FORTUNE_DATA.forEach((fortune, i) => {
-      const active = i === idx;
-      buttons[i].setAttribute('aria-selected', active ? 'true' : 'false');
-      buttons[i].tabIndex = active ? 0 : -1;
-      buttons[i].classList.toggle('tabBtn--active', active);
-    });
-    const fortune = FORTUNE_DATA[idx];
-    panelHost.innerHTML = '';
-    const panel = el('div', {
-      id: `panel-${fortune.id}`,
-      role: 'tabpanel',
-      'aria-labelledby': `tab-${fortune.id}`,
-      tabindex: '0',
-    });
-    panel.appendChild(cardsById[fortune.id]);
-    panelHost.appendChild(panel);
-    if (moveFocus) buttons[idx].focus();
+function ageAt(birthDate, now) {
+  let age = now.getFullYear() - birthDate.getFullYear();
+  if (now.getMonth() < birthDate.getMonth() || (now.getMonth() === birthDate.getMonth() && now.getDate() < birthDate.getDate())) age -= 1;
+  return age;
+}
+function buildDecade(birthDate, now) {
+  const { card, inner } = futureCard('今の10年の運勢');
+  inner.appendChild(el('p', { class: 'foot', style: 'margin-top:0', text: '大運の計算に使います。選んだ内容はこの端末の外へ送らず、保存もしません。' }));
+  const picker = el('div', { class: 'picker', role: 'group', 'aria-label': '性別を選ぶ' });
+  const resultHost = el('div');
+  let current = null;
+  let rbOpen = null;
+  const btns = {};
+  function show(g) {
+    current = g;
+    for (const k of Object.keys(btns)) { btns[k].classList.toggle('chip--on', k === g); btns[k].setAttribute('aria-pressed', k === g ? 'true' : 'false'); }
+    resultHost.innerHTML = '';
+    const d = calcDaiun(birthDate, g, now);
+    const age = ageAt(birthDate, now);
+    if (d.currentIndex == null) {
+      const first = d.periods[0];
+      const last = d.periods[d.periods.length - 1];
+      const msg = age < first.startAge
+        ? `最初の10年の区切りは${first.startAge}歳からです（いまは${age}歳）。`
+        : `8つの区切りは${last.endAge}歳までです（いまは${age}歳）。`;
+      resultHost.appendChild(el('p', { class: 'decadeTitle', text: msg }));
+      rbOpen = null;
+    } else {
+      const p = d.periods[d.currentIndex];
+      resultHost.appendChild(el('p', { class: 'decadeTitle', text: `今のあなたは「${p.ganzhi}」の10年（${p.startAge}歳〜${p.endAge}歳・無料）` }));
+      const rb = readableBox([{ items: toSentences(buildFreeDaiunReading(p.stem)) }], 'sub:decade', card, true);
+      rbOpen = rb.open;
+      resultHost.appendChild(rb.node);
+    }
   }
-
-  FORTUNE_DATA.forEach((fortune, i) => {
-    const btn = el('button', {
-      type: 'button',
-      class: 'tabBtn',
-      role: 'tab',
-      id: `tab-${fortune.id}`,
-      'aria-controls': `panel-${fortune.id}`,
-      'aria-selected': i === 0 ? 'true' : 'false',
-      tabindex: i === 0 ? '0' : '-1',
-      onclick: () => selectTab(i, false),
-      onkeydown: (e) => {
-        const last = FORTUNE_DATA.length - 1;
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); selectTab(i === last ? 0 : i + 1, true); }
-        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); selectTab(i === 0 ? last : i - 1, true); }
-        else if (e.key === 'Home') { e.preventDefault(); selectTab(0, true); }
-        else if (e.key === 'End') { e.preventDefault(); selectTab(last, true); }
-      },
-    }, [
-      el('span', { class: 'tabBtn__icon', text: fortune.icon }),
-      el('span', { class: 'tabBtn__name', text: fortune.name }),
-    ]);
-    buttons.push(btn);
-    tablist.appendChild(btn);
-  });
-
-  selectTab(0, false);
-
-  wrap.appendChild(tablist);
-  wrap.appendChild(panelHost);
-  return wrap;
-}
-
-// ─── 区画2: 4つを統合した、あなたの天命 ──────────────────────────
-// 博士指示（2026-10-16）：「2つずつ組み合わせた」とは書かず、
-// 「4つの命術を重ね合わせて多角的に読み解いた」という見せ方にする。
-// 実データ（九星×星座／数秘×日干／星座×日干）は src/readings/pairs/ の6ファイル
-// （別担当が作成中）。キーが見つからない間はそのブロックを出さずエラーにしない。
-
-const INTEGRATED_BLOCK_SPECS = [
-  { title: '本質の重なり', fetch: (p) => getStarSignOverlap(p.nineStar.honmeiStarName, p.astrology.sunSign) },
-  { title: '才能と使命', fetch: (p) => getNumStemOverlap(p.numerology.lifePath, p.fourPillars.day.stem) },
-  { title: '人との関わり方', fetch: (p) => getSignStemOverlap(p.astrology.sunSign, p.fourPillars.day.stem) },
-];
-
-// 九星×星座／数秘×日干／星座×日干 の3ブロックを並べる。1件も無ければ null を返す
-// （呼び出し側はその場合ブロック全体を省略し、アップセル部分だけ表示する）。
-async function buildIntegratedBlocks(profile) {
-  const results = await Promise.all(INTEGRATED_BLOCK_SPECS.map((spec) => spec.fetch(profile)));
-  const wrap = el('div', { class: 'integrated__blocks' });
-  INTEGRATED_BLOCK_SPECS.forEach((spec, i) => {
-    const result = results[i];
-    if (!result || !result.text) return;
-    const block = el('div', { class: 'integratedBlock' });
-    block.appendChild(el('div', { class: 'integratedBlock__title' }, [el('span', { class: 'bar' }), spec.title]));
-    block.appendChild(el('div', { class: 'integratedBlock__pair', text: result.label }));
-    block.appendChild(el('p', { class: 'integratedBlock__text', text: result.text }));
-    wrap.appendChild(block);
-  });
-  return wrap.childElementCount > 0 ? wrap : null;
-}
-
-// 残り16項目のアップセル（アプリ誘導）。統合鑑定区画の中、3ブロックの下に置く。
-function buildIntegratedUpsell() {
-  const body = el('div', { class: 'composite__body' });
-  body.appendChild(el('div', { class: 'composite__lockTitle', text: '残り16項目の鑑定を解放する' }));
-  body.appendChild(el('div', {
-    class: 'composite__lockDesc',
-    text: '相性・運気の流れ・結婚運・金運・前世まで、4占術を統合した鑑定の続きはアプリで見られます',
-  }));
-  body.appendChild(el('div', { class: 'ratioRow' }, [
-    el('span', { class: 'ratioBadge ratioBadge--paid', text: PAID_RATIO_TEXT }),
-  ]));
-  const list = el('div', { class: 'composite__list' });
-  for (const item of COMPOSITE_ITEMS) {
-    list.appendChild(el('div', { class: 'composite__item' }, [el('span', { class: 'composite__dot' }), item]));
+  for (const [g, label] of [['male', '男性'], ['female', '女性']]) {
+    btns[g] = el('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', text: label, onclick: () => show(g) });
+    picker.appendChild(btns[g]);
   }
-  body.appendChild(list);
-  body.appendChild(el('a', {
-    class: 'btn btn--gold',
-    href: APP_STORE_URL,
-    target: '_blank',
-    rel: 'noopener',
-    text: 'アプリで鑑定を解放する',
-  }));
-  return body;
+  inner.appendChild(picker);
+  inner.appendChild(resultHost);
+  resultHost.appendChild(el('p', { class: 'foot', text: '性別を選ぶと、いまの10年の読み物が表示されます。' }));
+  inner.appendChild(navRow('sub:decade'));
+  inner.appendChild(paidList([['ほかの時期の運勢（8期分）', FUTURE_PAID_NOTES.decade]], '詳しい続きは有料'));
+  return { el: card, open: () => { if (rbOpen) rbOpen(); } };
 }
 
-async function buildIntegratedSection(profile) {
-  const section = el('section', { class: 'integratedSection', id: 'integratedSection' });
-  section.appendChild(el('div', { class: 'integratedSection__head' }, [
-    el('h2', { class: 'integratedSection__title', text: '4つを統合した、あなたの天命' }),
-    el('p', {
-      class: 'integratedSection__lead',
-      text: '九星気学・数秘術・西洋占星術・四柱推命の結果を重ね合わせ、多角的に読み解きました',
-    }),
+function buildJushin(birthDate, now) {
+  const { beast } = calcJushin(birthDate);
+  const pos = cyclePositionAt(beast, now);
+  const { card, inner } = futureCard('今年の神獣');
+  inner.appendChild(el('div', { class: 'card__attr' }, [
+    el('div', { class: 'card__attrLabel', text: 'あなたの神獣' }),
+    el('div', {}, [el('span', { class: 'beastName', text: beast.name }), el('span', { class: 'beastRead', text: `（${beast.reading}）　属性：${beast.element}` })]),
+    el('p', { class: 'foot', text: BEAST_ONE_LINER[beast.name] ?? '' }),
   ]));
-  const blocks = await buildIntegratedBlocks(profile);
-  if (blocks) section.appendChild(blocks);
-  section.appendChild(buildIntegratedUpsell());
-  return section;
+  inner.appendChild(el('p', { class: 'decadeTitle', text: `${pos.year}年は${pos.season}の${pos.yearNo}年目` }));
+  inner.appendChild(el('span', { class: 'seasonBadge', style: `background:${SEASON_COLOR[pos.season]}`, text: `周期では${SEASON_THEME[pos.season]}の時期` }));
+  inner.appendChild(el('p', { class: 'rb__s', text: SEASON_GIST[pos.season] }));
+  const bar = el('div', { class: 'cycleBar', role: 'img', 'aria-label': `12年周期のうち、今年は${pos.season}の${pos.yearNo}年目` });
+  for (let i = 0; i < 12; i++) {
+    bar.appendChild(el('i', { class: i === pos.index ? 'on' : '', style: `background:${SEASON_COLOR[SEASONS[Math.floor(i / 3)]]}` }));
+  }
+  inner.appendChild(bar);
+  const labels = el('div', { class: 'cycleLabels' });
+  SEASONS.forEach((s) => labels.appendChild(el('span', { text: s })));
+  inner.appendChild(labels);
+  inner.appendChild(el('p', { class: 'foot', text: '12年周期の考え方にもとづく読み物です。毎年の過ごし方を考えるきっかけとして、気軽にお読みください。' }));
+  inner.appendChild(navRow('sub:jushin'));
+  inner.appendChild(paidList(JUSHIN_PAID_ITEMS.map((n) => [n, PAID_ITEM_HINTS[n]]), '有料で読める内容'));
+  return { el: card, open: null };
 }
 
-// ─── 今年の吉方位（九星気学・年盤）── 線のコンパスSVG ──────────────
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function svgEl(tag, attrs = {}) {
-  const node = document.createElementNS(SVG_NS, tag);
-  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
-  return node;
+// ─── ③ 総合占い ────────────────────────────────────────────
+function buildCategory(cat, secs, ctxRef) {
+  const wrap = el('div', { class: 'cat' });
+  wrap.appendChild(el('h4', { class: 'sub__h' }, [
+    el('span', { class: 'bar', style: `background:${cat.color}` }), cat.label,
+    el('span', { class: 'cat__count', text: `無料${cat.free.length}・有料${cat.paid.length}` }),
+  ]));
+  const opens = [];
+  for (const title of cat.free) {
+    const sec = secs.find((s) => s.title === title);
+    const color = (FREE_ITEM_META[title] ?? {}).color ?? cat.color;
+    const card = el('div', { class: 'compCard', style: `background:${color}0D;border-color:${color}50` });
+    card.appendChild(el('div', { class: 'compCard__head', style: `background:${color}28` }, [
+      el('div', { class: 'card__title' }, [el('span', { class: 'card__dot', style: `background:${color}` }), el('span', { class: 'card__name', text: title })]),
+      badge('free', '無料'),
+    ]));
+    const inner = el('div', { class: 'compCard__inner' });
+    card.appendChild(inner);
+    if (sec) {
+      if (sec.quote) inner.appendChild(el('p', { class: 'compCard__quote', style: `color:${color}`, text: sec.quote }));
+      const rb = readableBox(parseBlocks(sec.body), `comp:${title}`, card);
+      inner.appendChild(rb.node);
+      opens.push(rb.open);
+      ctxRef.targets[`comp:${title}`] = { el: card, open: rb.open };
+    } else {
+      inner.appendChild(el('p', { class: 'foot', text: 'この項目はWeb版では準備中です。アプリで読めます。' }));
+      ctxRef.targets[`comp:${title}`] = { el: card, open: null };
+    }
+    wrap.appendChild(card);
+  }
+  wrap.appendChild(paidList(cat.paid.map((n) => [n, PAID_ITEM_HINTS[n]])));
+  return { el: wrap, open: () => opens.forEach((f) => f()) };
 }
 
+// ─── おまけ：今年の吉方位（九星気学・年盤）＋ 4つを重ねて読む ─────────────
 function buildCompassSvg(dirsByKind, size = 220) {
   const cx = size / 2;
   const cy = size / 2;
@@ -412,37 +445,13 @@ function buildCompassSvg(dirsByKind, size = 220) {
   return svg;
 }
 
-function buildYearlySection(honmeiStar, kigakuYear) {
-  const reading = getYearlyReading(honmeiStar, kigakuYear);
-  if (!reading) return null;
-  const box = el('div', { class: 'yearly' });
-  box.appendChild(el('div', { class: 'yearly__label' }, [el('span', { class: 'bar' }), `${kigakuYear}年のあなたの運勢`]));
-  box.appendChild(el('p', { class: 'yearly__text', text: reading.overview }));
-
-  const grid = el('div', { class: 'yearly__grid' });
-  const items = [['仕事', reading.work], ['お金', reading.money], ['恋愛', reading.love], ['健康', reading.health]];
-  for (const [label, text] of items) {
-    grid.appendChild(el('div', { class: 'yearly__item' }, [
-      el('div', { class: 'yearly__itemLabel', text: label }),
-      el('div', { class: 'yearly__itemText', text }),
-    ]));
-  }
-  box.appendChild(grid);
-  return box;
-}
-
 function buildDirectionSection(yearDirections) {
   const box = el('div', { class: 'direction' });
   box.appendChild(el('div', { class: 'direction__label' }, [el('span', { class: 'bar bar--green' }), `${yearDirections.kigakuYear}年のあなたの吉方位`]));
   box.appendChild(el('div', { class: 'direction__note', text: '九星気学の年盤（立春で切り替わる年の方位盤）にもとづく、今年1年の吉方位です。' }));
-
   const dirsByKind = {};
   for (const d of DIR_ORDER) dirsByKind[d] = yearDirections.dirs[d].kind;
-
-  const compassWrap = el('div', { class: 'direction__compass' });
-  compassWrap.appendChild(buildCompassSvg(dirsByKind));
-  box.appendChild(compassWrap);
-
+  box.appendChild(el('div', { class: 'direction__compass' }, [buildCompassSvg(dirsByKind)]));
   if (yearDirections.kichiDirs.length > 0) {
     box.appendChild(el('div', { class: 'direction__rowLabel direction__rowLabel--good', text: '吉方位' }));
     box.appendChild(tagRow(yearDirections.kichiDirs.map((d) => DIR_META[d].jp), 'good'));
@@ -453,17 +462,149 @@ function buildDirectionSection(yearDirections) {
     box.appendChild(el('div', { class: 'direction__rowLabel direction__rowLabel--bad', text: '避けたい方角（凶方）' }));
     box.appendChild(tagRow(yearDirections.kyouDirs.map((d) => DIR_META[d].jp), 'challenge'));
   }
-
-  box.appendChild(el('p', { class: 'direction__appHint', text: '今月・今日の吉方位、詳しい性格診断はアプリで。' }));
-  box.appendChild(el('a', {
-    class: 'btn btn--ghost-gold',
-    href: APP_STORE_URL,
-    target: '_blank',
-    rel: 'noopener',
-    text: '今月・今日の吉方位をアプリで見る',
-  }));
-
+  box.appendChild(paidList([
+    ['今月の吉方位（月盤）', 'アプリの吉方位マップで、今月の方位盤を確認できます'],
+    ['今日の吉方位（日盤）', 'アプリの吉方位マップで、今日の方位盤を確認できます'],
+  ], '詳しい続きは有料'));
   return box;
+}
+
+const INTEGRATED_BLOCK_SPECS = [
+  { title: '本質の重なり', fetch: (p) => getStarSignOverlap(p.nineStar.honmeiStarName, p.astrology.sunSign) },
+  { title: '才能と使命', fetch: (p) => getNumStemOverlap(p.numerology.lifePath, p.fourPillars.day.stem) },
+  { title: '人との関わり方', fetch: (p) => getSignStemOverlap(p.astrology.sunSign, p.fourPillars.day.stem) },
+];
+async function buildIntegratedBlocks(profile) {
+  const results = await Promise.all(INTEGRATED_BLOCK_SPECS.map((spec) => spec.fetch(profile)));
+  const wrap = el('div');
+  INTEGRATED_BLOCK_SPECS.forEach((spec, i) => {
+    const result = results[i];
+    if (!result || !result.text) return;
+    wrap.appendChild(el('div', { class: 'integratedBlock' }, [
+      el('div', { class: 'integratedBlock__title' }, [el('span', { class: 'bar' }), spec.title]),
+      el('div', { class: 'integratedBlock__pair', text: result.label }),
+      el('p', { class: 'integratedBlock__text', text: result.text }),
+    ]));
+  });
+  return wrap.childElementCount > 0 ? wrap : null;
+}
+
+// ─── 天命まとめ・天命の目次（図） ─────────────────────────────────
+function buildSummaryPanel(baseById, freeSecs) {
+  const groups = buildSummary(baseById, freeSecs);
+  if (!groups.length) return null;
+  const panel = el('section', { class: 'panel' });
+  panel.appendChild(el('h2', { class: 'panel__title', text: summaryTitle() }));
+  panel.appendChild(el('p', { class: 'panel__lead', text: '無料で読める項目の「結論」だけを並べました。タップすると、その鑑定へ移動します。' }));
+  for (const g of groups) {
+    panel.appendChild(el('div', { class: 'sumGroup__h', text: g.heading }));
+    for (const r of g.rows) {
+      panel.appendChild(el('button', { type: 'button', class: 'sumRow', onclick: () => jumpKey(r.key) }, [
+        el('span', { class: 'sumRow__n', text: r.name }),
+        el('span', { class: 'sumRow__t', text: r.text }),
+      ]));
+    }
+  }
+  return panel;
+}
+
+function buildDiagramPanel() {
+  const d = el('details', { class: 'panel diagram', open: '' });
+  d.appendChild(el('summary', {}, [
+    el('h2', { class: 'panel__title', style: 'margin:0', text: '天命の目次' }),
+    el('span', { class: 'diagram__toggle', text: '開く／閉じる' }),
+  ]));
+  d.appendChild(el('div', { class: 'legend' }, [
+    el('span', {}, [badge('free', '無料'), '読めます']),
+    el('span', {}, [badge('paid', '有料'), 'アプリで解放']),
+    el('span', {}, [badge('part', '一部有料'), '中に有料あり']),
+  ]));
+  d.appendChild(el('div', { class: 'dgFoot dgFoot--top' }, [
+    el('div', { class: 'dgFoot__free', text: buildFreeRangeSummary() }),
+    el('div', {}, [el('b', { text: buildPaidLine() })]),
+  ]));
+  buildDiagram().forEach((ch) => {
+    const chap = el('div', { class: 'dgCh' });
+    chap.appendChild(el('h3', { class: 'dgCh__h', text: `${ch.chapter.no} ${ch.chapter.title}` }));
+    chap.appendChild(el('p', { class: 'dgCh__d', text: ch.chapter.desc }));
+    ch.subs.forEach((s) => {
+      const st = subStatus(s.items);
+      const key = jumpKeyForSub(ch.chapter.key, s.key);
+      const row = el('button', { type: 'button', class: 'dgSub', onclick: () => jumpKey(key) });
+      row.appendChild(el('div', { class: 'dgSub__top' }, [
+        el('span', { class: 'dgSub__label', text: s.label }),
+        badge(st === 'free' ? 'free' : st === 'paid' ? 'paid' : 'part', subStatusLabel(st)),
+      ]));
+      if (s.note) row.appendChild(el('div', { class: 'dgSub__note', text: s.note }));
+      if (s.items.length) {
+        const items = el('div', { class: 'dgSub__items' });
+        s.items.forEach((it) => items.appendChild(el('span', {}, [it.free ? el('i', { class: 'dot' }) : lockIcon(), it.label])));
+        row.appendChild(items);
+      }
+      chap.appendChild(row);
+    });
+    d.appendChild(chap);
+  });
+  return d;
+}
+// 目次の小見出し → 飛び先のキー
+function jumpKeyForSub(chapterKey, subKey) {
+  if (chapterKey === 'divination') return `div:${subKey}`;
+  if (chapterKey === 'future') return `sub:${subKey}`;
+  return `cat:${subKey}`;
+}
+
+// ─── 固定目次バー（2段） ──────────────────────────────────────
+function setupTocBar() {
+  const t1 = $('#tocT1');
+  const t2 = $('#tocT2');
+  t1.innerHTML = '';
+  t2.innerHTML = '';
+  const chBtns = TENMEI_CHAPTERS.map((ch, ci) => {
+    const b = el('button', { type: 'button', class: 'chip', text: `${ch.no} ${ch.title}`, onclick: () => jumpKey(ctx.sections.find((s) => s.chapter === ci).jump) });
+    t1.appendChild(b);
+    return b;
+  });
+  let shownChapter = -1;
+  let subBtns = [];
+  function renderT2(ci) {
+    t2.innerHTML = '';
+    subBtns = ctx.sections.filter((s) => s.chapter === ci).map((s) => {
+      const b = el('button', { type: 'button', class: 'chip', text: s.label, onclick: () => jumpKey(s.jump) });
+      t2.appendChild(b);
+      return { b, s };
+    });
+    shownChapter = ci;
+  }
+  function update() {
+    const bar = $('#tocBar');
+    if (!bar || $('#resultBody').hidden) return;
+    const off = barHeight() + 8;
+    const ys = ctx.sections.map((s) => s.el.getBoundingClientRect().top + window.scrollY);
+    const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    const idx = pickActiveIndex(ys, window.scrollY, off, atEnd);
+    const act = ctx.sections[idx];
+    if (!act) return;
+    if (shownChapter !== act.chapter) renderT2(act.chapter);
+    chBtns.forEach((b, i) => b.classList.toggle('chip--on', i === act.chapter));
+    subBtns.forEach(({ b, s }) => {
+      const on = s === act;
+      b.classList.toggle('chip--on', on);
+      if (on) t2.scrollLeft = Math.max(0, b.offsetLeft - 12);
+    });
+  }
+  ctx.updateToc = update;
+  renderT2(0);
+  update();
+}
+let scrollBound = false;
+function bindScroll() {
+  if (scrollBound) return;
+  scrollBound = true;
+  let raf = 0;
+  const run = () => { raf = 0; if (ctx && ctx.updateToc) ctx.updateToc(); };
+  window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(run); }, { passive: true });
+  window.addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(run); });
 }
 
 // ─── ローディング演出（診断ボタン押下〜結果表示まで約5秒） ──────────────
@@ -548,18 +689,15 @@ function formatBirthLabel(y, m, d) {
 let isRendering = false;
 
 async function renderResult(y, m, d) {
-  // 連打での二重実行を防ぐ（すでに診断中なら無視する）
   if (isRendering) return;
   isRendering = true;
-
   try {
     const birthDate = new Date(y, m - 1, d);
+    const now = new Date();
     const profile = buildFortuneProfile(birthDate);
 
     const resultSection = $('#result');
     const resultBody = $('#resultBody');
-
-    // 結果の代わりにローディング演出を先に表示する（共有URL等どの経路から呼ばれても同じ）
     $('#intro').hidden = true;
     resultSection.hidden = false;
     resultBody.hidden = true;
@@ -567,45 +705,127 @@ async function renderResult(y, m, d) {
     $('#loadingHost').hidden = false;
     resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    // ローディング演出（約5秒）と、裏側でのデータ組み立て（統合鑑定のpairs読み込み含む）を並行して進める
-    const [, integratedSection] = await Promise.all([
+    // ローディング演出（約5秒）と、裏側での組み立て（4つを重ねて読む3ブロックの読み込み含む）を並行して進める
+    const [, pairBlocks] = await Promise.all([
       runLoadingSequence(),
-      buildIntegratedSection(profile),
+      SHOW_PAIR_BLOCKS ? buildIntegratedBlocks(profile) : Promise.resolve(null),
     ]);
 
+    ctx = { targets: {}, sections: [], updateToc: null };
+
+    // ① 4つの運勢
     const userAttrs = {
       nine_star: { label: '本命星', value: profile.nineStar.honmeiStarName, sub: `月命星：${profile.nineStar.tsukiStarName}`, subNote: TSUKI_STAR_NOTE },
       numerology: { label: '数秘術の数', value: String(profile.numerology.lifePath), sub: profile.numerology.ismaster ? 'マスターナンバー' : undefined },
       astrology: { label: '太陽星座', value: profile.astrology.sunSign, sub: `月星座：${profile.astrology.moonSign}` },
       four_pillars: { label: '命式', value: profile.fourPillars.day.combined, sub: `五行：${profile.fourPillars.year.stem}` },
     };
+    const baseById = {};
+    const chaptersHost = $('#chaptersHost');
+    chaptersHost.innerHTML = '';
+    const chapterEls = TENMEI_CHAPTERS.map((ch) => {
+      const sec = el('section', { class: 'chapter' });
+      sec.appendChild(el('div', { class: 'chapter__head' }, [
+        el('div', { class: 'chapter__no', text: ch.no }),
+        el('h2', { class: 'chapter__title', text: ch.title }),
+        el('p', { class: 'chapter__desc', text: ch.desc }),
+      ]));
+      chaptersHost.appendChild(sec);
+      return sec;
+    });
+    const addSection = (chapter, label, jump, node) => ctx.sections.push({ chapter, label, jump, el: node });
 
-    const soloHost = $('#soloHost');
-    soloHost.innerHTML = '';
-    const cardsById = {};
     for (const fortune of FORTUNE_DATA) {
       const extras = buildFortuneExtras(profile, fortune.id);
       const reading = READING_LOOKUP[fortune.id] ? READING_LOOKUP[fortune.id](profile) : null;
-      cardsById[fortune.id] = buildCard(fortune, userAttrs[fortune.id], extras, reading);
+      baseById[fortune.id] = reading;
+      const key = `div:${fortune.id}`;
+      const card = buildCard(fortune, userAttrs[fortune.id], extras, reading, key);
+      ctx.targets[key] = card;
+      chapterEls[0].appendChild(card.el);
+      addSection(0, fortune.name, key, card.el);
     }
-    soloHost.appendChild(buildSoloSection(cardsById));
+    chapterEls[0].appendChild(ctaBox('ここまでが、無料で読める4つの運勢です。4つを重ねて読む総合占いの続きは、アプリで読めます。'));
 
-    const integratedHost = $('#integratedHost');
-    integratedHost.innerHTML = '';
-    integratedHost.appendChild(integratedSection);
+    // ② 今後の運勢
+    const subWrap = (label) => {
+      const w = el('div', { class: 'sub' });
+      w.appendChild(el('h3', { class: 'sub__h' }, [el('span', { class: 'bar' }), label]));
+      chapterEls[1].appendChild(w);
+      return w;
+    };
+    const futureBuilders = [
+      ['monthly', '月ごとの運勢', () => buildMonthly(profile, birthDate, now)],
+      ['decade', '10年ごとの運勢', () => buildDecade(birthDate, now)],
+      ['jushin', '神獣', () => buildJushin(birthDate, now)],
+    ];
+    for (const [k, label, build] of futureBuilders) {
+      const w = subWrap(label);
+      const part = build();
+      w.appendChild(part.el);
+      ctx.targets[`sub:${k}`] = { el: w, open: part.open };
+      addSection(1, label, `sub:${k}`, w);
+    }
+    const futurePaid = 1 + 1 + JUSHIN_PAID_ITEMS.length;
+    chapterEls[1].appendChild(ctaBox(`ほかの月・ほかの時期・神獣の詳しい読み物（有料${futurePaid}項目）は、アプリで天命の鑑定を解放すると読めます。`));
 
-    const directionHost = $('#directionHost');
-    directionHost.innerHTML = '';
-    const yearDirections = calcYearDirections(birthDate);
-    const yearlyBox = buildYearlySection(yearDirections.honmeiStar, yearDirections.kigakuYear);
-    if (yearlyBox) directionHost.appendChild(yearlyBox);
-    directionHost.appendChild(buildDirectionSection(yearDirections));
+    // ③ 総合占い
+    const freeSecs = buildFreeSecs(getCompositeFreeReading(profile.nineStar.honmeiStarName));
+    for (const cat of COMPOSITE_CATEGORIES) {
+      const part = buildCategory(cat, freeSecs, ctx);
+      chapterEls[2].appendChild(part.el);
+      ctx.targets[`cat:${cat.key}`] = { el: part.el, open: part.open };
+      addSection(2, cat.label, `cat:${cat.key}`, part.el);
+    }
+    chapterEls[2].appendChild(ctaBox(`有料${PAID_COMPOSITE_ITEM_COUNT}項目（人生の目的・金運・結婚運など）は、アプリで天命の鑑定を解放すると読めます。`));
+
+    // 天命まとめ・目次
+    const sumHost = $('#summaryHost');
+    sumHost.innerHTML = '';
+    const panel = buildSummaryPanel(baseById, freeSecs);
+    if (panel) sumHost.appendChild(panel);
+    const dgHost = $('#diagramHost');
+    dgHost.innerHTML = '';
+    dgHost.appendChild(buildDiagramPanel());
+
+    // おまけ（Webだけの内容）
+    const extraHost = $('#extraHost');
+    extraHost.innerHTML = '';
+    const extra = el('section', { class: 'extra' });
+    extra.appendChild(el('div', { class: 'extra__tag', text: 'おまけ（Web版だけの内容）' }));
+    extra.appendChild(buildDirectionSection(calcYearDirections(birthDate)));
+    extra.appendChild(el('h3', { class: 'sub__h' }, [el('span', { class: 'bar' }), '4つを重ねて読む']));
+    if (pairBlocks) {
+      extra.appendChild(pairBlocks);
+    } else {
+      // 未公開の予告（中身は出さない。準備ができたら SHOW_PAIR_BLOCKS を true にして解放）
+      const soon = el('div', { class: 'paidRow paidRow--soon' });
+      soon.appendChild(el('div', { class: 'paidRow__top' }, [
+        el('span', { class: 'paidRow__name', text: '4つの占いの重なり' }),
+        el('span', { class: 'badge badge--soon', text: '近日公開' }),
+      ]));
+      soon.appendChild(el('p', { class: 'paidRow__hint', text: '九星気学・数秘術・西洋占星術・四柱推命をふたつずつ重ねると、ひとつだけでは見えない一面が浮かびます。準備ができしだい、ここで読めるようになります。' }));
+      extra.appendChild(soon);
+    }
+    extraHost.appendChild(extra);
+
+    // ページ末尾のまとめ CTA
+    const endHost = $('#endCtaHost');
+    endHost.innerHTML = '';
+    const cta = el('div', { class: 'cta cta--end' }, [
+      el('p', { class: 'cta__title', text: '続きはアプリで' }),
+      el('p', { class: 'cta__lead', text: `有料の${paidItemCount()}項目（今後の運勢${futurePaid}・総合占い${PAID_COMPOSITE_ITEM_COUNT}）は、パワースポットマップで天命の鑑定を解放すると読めます。無料の範囲は、アプリでもここまでと同じです。` }),
+      appButton('パワースポットマップを見る'),
+    ]);
+    endHost.appendChild(cta);
 
     $('#resultHeading').textContent = `${profile.nineStar.honmeiStarName}の あなたの天命`;
     $('#resultBirth').textContent = formatBirthLabel(y, m, d);
 
     $('#loadingHost').hidden = true;
     resultBody.hidden = false;
+    setupTocBar();
+    bindScroll();
   } finally {
     isRendering = false;
   }
@@ -669,6 +889,7 @@ function init() {
   $('#resetBtn').addEventListener('click', () => {
     $('#result').hidden = true;
     $('#intro').hidden = false;
+    ctx = null;
     $('#intro').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
