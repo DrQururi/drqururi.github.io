@@ -61,6 +61,15 @@ export function buildTiles(profile) {
     { label: '命式', value: profile.fourPillars.day.combined },
   ];
 }
+// ─── Xシェアの文面（本命星だけを入れる。生年月日・呼び名・回答は入れない） ───────────
+const SHARE_TEXT_DEFAULT = '天命診断をやってみた';
+export function buildShareText(honmeiStarName) {
+  if (!honmeiStarName) return SHARE_TEXT_DEFAULT;
+  return `天命診断をやってみたら「${honmeiStarName}」タイプでした。生年月日だけで4つの占いをまとめて診断してくれる #天命診断`;
+}
+export function buildShareIntent(honmeiStarName, url) {
+  return `https://x.com/intent/post?text=${encodeURIComponent(buildShareText(honmeiStarName))}&url=${encodeURIComponent(url)}`;
+}
 // 入口の見本（例示の値。計算結果ではない）
 export const SAMPLE_TILES = [
   { label: '本命星', value: '一白水星' },

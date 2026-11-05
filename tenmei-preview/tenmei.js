@@ -24,7 +24,7 @@ import {
 } from './readable.mjs';
 import {
   NICKNAME_MAX, normalizeNickname, callName, GENDER_CHOICES, CONCERNS, SAMPLE_TILES,
-  buildTiles, buildLoadingRows, buildAttention, ageAt,
+  buildTiles, buildLoadingRows, buildAttention, ageAt, buildShareIntent,
 } from './onboarding-core.mjs';
 import {
   buildMonthlyFortuneCalc, calcMonthlyNineStarPalace, buildFreeMonthlyReading, buildFreeMonthlyFootnote, STRENGTH_LABEL,
@@ -704,6 +704,7 @@ async function renderResult(y, m, d, answers) {
     const birthDate = new Date(y, m - 1, d);
     const now = new Date();
     const profile = buildFortuneProfile(birthDate);
+    setupShare(profile.nineStar.honmeiStarName);
 
     const resultSection = $('#result');
     const resultBody = $('#resultBody');
@@ -894,11 +895,10 @@ function resetBirthDefaults() {
   $('#birthDay').value = '1';
 }
 
-function setupShare() {
-  const text = 'パワースポットマップの天命占いをやってみた';
-  const url = SITE_URL;
-  const intent = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-  $('#shareBtn').setAttribute('href', intent);
+// Xシェア。honmeiStarName を渡すと「〇〇タイプ」入りの文面になる（本命星のみ。生年月日・呼び名・回答は入れない）。
+// 引数なし＝固定文のフォールバック（init() で1回呼ぶ）。
+function setupShare(honmeiStarName) {
+  $('#shareBtn').setAttribute('href', buildShareIntent(honmeiStarName, SITE_URL));
 }
 
 // ─── S0 入口：「診断でわかること」3枚（結果画面と同じ部品で作った見本つき） ──────────
